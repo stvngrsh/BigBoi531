@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icon, Text } from 'native-base';
-import { StyleSheet, View } from 'react-native';
+import { Icon, Text, Thumbnail } from 'native-base';
+import { StyleSheet, View, Image } from 'react-native';
 import { Theme } from '../Theme';
 
 const PLATES = [45, 35, 25, 10, 5, 2.5];
@@ -12,16 +12,21 @@ export interface PlateCounterProps {
 
 export interface PlateCounterState {
   plates: number[];
+  plateImages: JSX.Element[];
 }
 
 export default class PlateCounter extends React.Component<PlateCounterProps, PlateCounterState> {
   
   state: PlateCounterState = {
-    plates: []
+    plates: [],
+    plateImages: []
   }
   componentDidMount() {
-    let plates = this.calculatePlates(this.props.weight);
-    this.setState({plates: plates});
+    let {plates, plateImages} = this.calculatePlates(this.props.weight);
+    this.setState({
+      plates: plates,
+      plateImages: plateImages
+    });
   }
   
   calculatePlates = (weight: number) => {
@@ -38,7 +43,32 @@ export default class PlateCounter extends React.Component<PlateCounterProps, Pla
         remainingWeight -= plate * count;
       }
     }
-    return plates;
+    let plateImages: JSX.Element[] = [];
+    for(let plate of plates) {
+      plateImages.push(<Image source={require('./img.png')} />);
+
+      // switch(plate) {
+      //   case 45:
+      //     plateImages.push(<Image source={require('../assets/img/1x/45.png')} />);
+      //     break;
+      //   case 35:
+      //     plateImages.push(<Image source={require('../assets/img/1x/35.png')} />);
+      //     break;
+      //   case 25:
+      //     plateImages.push(<Image source={require('../assets/img/1x/25.png')} />);
+      //     break;
+      //   case 10:
+      //     plateImages.push(<Image source={require('../assets/img/1x/10.png')} />);
+      //     break;
+      //   case 5:
+      //     plateImages.push(<Image source={require('../assets/img/1x/5.png')} />);
+      //     break;
+      //   case 2.5:
+      //     plateImages.push(<Image source={require('../assets/img/1x/2_5.png')} />);
+      //     break;
+      // }
+    }
+    return {plates, plateImages};
   }
 
   public render() {
@@ -47,8 +77,7 @@ export default class PlateCounter extends React.Component<PlateCounterProps, Pla
         {this.state.plates.map((plate, index) => {
           return (
             <View key={index} style={styles.plate}>
-              <Icon name="plate" ios='ios-locate' android="md-locate" style={styles.icon} />
-              <Text style={styles.label}>{plate}</Text>
+              {this.state.plateImages[index]}
             </View>
           );
         })}

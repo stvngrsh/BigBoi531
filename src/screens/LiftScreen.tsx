@@ -176,14 +176,14 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
             {lifts.map((lift, index) => {
               return (
                 <Tab key={index} heading={lift}>
-                  {this.renderSet(warmupSets, lift, "Warmup Sets", index, true)};
-                  {this.renderSet(mainSets, lift, "Main Sets", index)};
-                  {this.renderFSL(mainSets, fsl, lift)}; 
+                  {this.renderSet(warmupSets, lift, "Warmup Sets", index, true)}
+                  {this.renderSet(mainSets, lift, "Main Sets", index)}
+                  {this.renderFSL(mainSets, fsl, lift)}
                 </Tab>
               );
             })}
             <Tab heading="Secondarys">
-              hello
+              <Text>asdf</Text>
             </Tab>
           </Tabs>
         </Content>
