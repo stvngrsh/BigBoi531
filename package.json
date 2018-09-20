@@ -1,0 +1,45 @@
+{
+  "name": "BigBoi531",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "@types/react": "^16.4.14",
+    "@types/react-dom": "^16.0.7",
+    "@types/react-native": "^0.56.21",
+    "@types/react-navigation": "^2.0.21",
+    "concurrently": "^4.0.1",
+    "react-native-scripts": "1.14.0",
+    "react-test-renderer": "16.3.1",
+    "rimraf": "^2.6.2",
+    "tslint": "^5.11.0",
+    "typescript": "^3.0.3"
+  },
+  "main": "./node_modules/react-native-scripts/build/bin/crna-entry.js",
+  "scripts": {
+    "lint": "tslint src/**/*.ts",
+    "tsc": "tsc",
+    "clean": "rimraf build",
+    "build": "yarn run clean && yarn run tsc --",
+    "watch": "yarn run build -- -w",
+    "watchAndRunAndroid": "concurrently \"yarn run watch\" \"yarn run android\"",
+    "buildRunAndroid": "yarn run build && yarn run watchAndRunAndroid ",
+    "watchAndRunIOS": "concurrently \"yarn run watch\" \"yarn run ios\"",
+    "buildRunIOS": "yarn run build && yarn run watchAndRunIOS ",
+    "watchAndStart": "concurrently \"yarn run watch\" \"yarn run start\"",
+    "buildAndStart": "yarn run build && yarn run watchAndStart ",
+    "start": "react-native-scripts start",
+    "eject": "react-native-scripts eject",
+    "android": "react-native-scripts android",
+    "ios": "react-native-scripts ios",
+    "debug": "REACT_DEBUGGER=\"unset ELECTRON_RUN_AS_NODE\" && open -g 'rndebugger://set-debugger-loc?port=19001'"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^6.3.1",
+    "expo": "^27.0.1",
+    "native-base": "^2.8.0",
+    "react": "16.3.1",
+    "react-native": "~0.55.2",
+    "react-navigation": "^2.14.2",
+    "unstated": "^2.1.1"
+  }
+}
