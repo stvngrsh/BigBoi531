@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^6.3.1",
+    "date-fns": "^1.29.0",
     "expo": "28.0.1",
     "native-base": "2.8.0",
     "react": "16.3.1",

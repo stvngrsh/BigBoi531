@@ -3,5 +3,6 @@ export const Theme = {
     darkGray: '#303030',
     lightBlue: '#6C91C2',
     darkBlue: '#0B3954',
-    red: '#C84630'
+    red: '#C84630',
+    success: '#4BB543'
 }
