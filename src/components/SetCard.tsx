@@ -4,46 +4,34 @@ import { Set, Lift } from '../Types';
 import { View, StyleSheet } from 'react-native';
 import { Theme } from '../Theme';
 import PlateCounter from './PlateCounter';
+import { Weight } from './Weight';
 
 export interface SetCardProps {
+  finishSet: Function,
+  finishedSets: boolean[],
   title: string,
   sets: Set[],
   lift: Lift,
-  startTimer: Function,
   getWeight: Function
 }
 
 export interface SetCardState {
   expanded: boolean,
-  finishedSets: boolean[]
 }
 
 export default class SetCard extends React.Component<SetCardProps, SetCardState> {
   state: SetCardState = {
-    expanded: true,
-    finishedSets: []
+    expanded: true
   }
 
   collapseExpand() {
     this.setState({expanded: !this.state.expanded});
   }
 
-  finishSet = (setIndex: number, disabled: boolean) => {
-    // if(!disabled) {
-      let finishedSets = [...this.state.finishedSets];
-      finishedSets[setIndex] = !finishedSets[setIndex];
-      this.setState({finishedSets: finishedSets});
-    
-      this.props.startTimer(10);
-    // } else {
-    //   alert("You must finish the previous set!");
-    // }
-  }
-
   public render() {
     let allSetsDone = false;
     let trueCount = 0;
-    this.state.finishedSets.forEach((set) => {
+    this.props.finishedSets.forEach((set) => {
       if(set === true) {
         trueCount++;
       }
@@ -63,18 +51,23 @@ export default class SetCard extends React.Component<SetCardProps, SetCardState>
               <Body>
                 {this.props.sets.map((set, index) => { 
                   let weight = this.props.getWeight(set.percent, this.props.lift);
-                  let disabled = index > 0 && this.state.finishedSets[index - 1] === false;
 
                   return (
-                    <View style={styles.set} key={index}>
-                      <Text style={styles.text}>{weight} x{set.reps}</Text>
-                      <View style={styles.plates}>
-                        <PlateCounter weight={weight} />
+                    <Body key={index} style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+                      <Text style={styles.subTitle}>{set.percent}% RM</Text>
+                      <View style={styles.set}>
+                        <Text style={styles.text}>
+                          <Weight weight={weight}/> 
+                          x{set.reps}{set.amrap && '+'}
+                        </Text>
+                        <View style={styles.plates}>
+                          <PlateCounter weight={weight} />
+                        </View>
+                        <View style={styles.checkboxOuter} >
+                          <CheckBox onPress={() => this.props.finishSet(index)} style={styles.checkbox} checked={this.props.finishedSets[index]} />
+                        </View>
                       </View>
-                      <View style={styles.checkboxOuter} >
-                        <CheckBox onPress={() => this.finishSet(index, disabled)} style={disabled ? styles.checkBoxDisabled : styles.checkbox} checked={this.state.finishedSets[index]} />
-                      </View>
-                    </View>
+                    </Body>
                   );
                 })}
               </Body>
@@ -120,5 +113,8 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     margin: 5
+  },
+  subTitle: {
+    fontSize: 14
   }
 });

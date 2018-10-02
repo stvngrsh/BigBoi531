@@ -25,7 +25,8 @@
     },
     "exclude": [
       "node_modules",
-      "other"
+      "other",
+      "build"
     ],
     "types": [
       "typePatches"

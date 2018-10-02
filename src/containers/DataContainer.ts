@@ -1,31 +1,55 @@
 import { Container } from "unstated";
 import { Lift } from "../Types";
+import { AsyncStorage } from "react-native"
+import { CycleData } from '../../src/Types';
+
+const CURRENT_CYCLE = "CURRENT_CYCLE";
+const PAST_CYCLES = "PAST_CYCLES";
 
 export type DataContainerState = {
-    week: number,
-    day: number,
-    lift: Lift,
-    header: string
+    header: string,
+    currentCycle?: CycleData,
+    pastCycles?: CycleData[]
 }
 
 export default class DataContainer extends Container<DataContainerState> {
     
-    state: DataContainerState = {
-        header: "Day 1",
-        week: 1,
-        day: 1,
-        lift: Lift.BENCH
+    constructor() {
+        super();
+        
+        this.state = {
+            header: "Day 1"
+        }
     }
 
-    setWeek = (week: number) => {
-        return new Promise((resolve) => this.setState({week: week}, resolve));
-    };
-
-    setDay = (day: number) => {
-        return new Promise((resolve) => this.setState({day: day}, resolve));
+    addNewCycle = () => {
+        let newCycle = new CycleData();
+        AsyncStorage.setItem(CURRENT_CYCLE, JSON.stringify(newCycle)).then(() => {
+            this.setState({currentCycle: newCycle}, () => console.log(this.state.currentCycle));
+        });
     }
 
-    setLift = (lift: Lift) => {
-        return new Promise((resolve) => this.setState({lift: lift}, resolve));
+    clearAll = () => {
+        console.log('Clearing all data');
+        return AsyncStorage.clear();
     }
+
+    getCurrentCycle = async () => {
+        try {
+            const currentCycleJSON = await AsyncStorage.getItem(CURRENT_CYCLE);
+            if(currentCycleJSON !== null) {
+                let currentCycle = JSON.parse(currentCycleJSON);
+                this.setState({
+                    currentCycle: currentCycle
+                });
+            } else {
+                this.setState({
+                    currentCycle: undefined
+                })
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    
 }
