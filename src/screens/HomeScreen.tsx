@@ -1,9 +1,9 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { NavigationScreenProp } from 'react-navigation';
 import Template from '../Template';
 import DataContainer from '../containers/DataContainer';
-import { Button, Text, Icon, Spinner, Container, Content } from 'native-base';
+import { View, Button, Text, Icon, Spinner, Container, Content, Header, Title, Body, List, ListItem} from 'native-base';
 import { Subscribe } from 'unstated';
 
 export interface HomeScreenProps {
@@ -23,12 +23,14 @@ export default class HomeScreen extends React.Component<HomeScreenProps, HomeScr
 
   componentDidMount() {
     this.props.dataContainer.getCurrentCycle().then(() => this.setState({loaded: true}));
+    this.props.dataContainer.getPastCycles();
   }
 
   clear = () => {
     this.props.dataContainer.clearAll().then(() => {
       this.setState({loaded: false});
       this.props.dataContainer.getCurrentCycle().then(() => this.setState({loaded: true}));
+      this.props.dataContainer.getPastCycles();
     });
   }
 
@@ -51,6 +53,7 @@ export default class HomeScreen extends React.Component<HomeScreenProps, HomeScr
       <Subscribe to={[DataContainer]} >
         {(data: DataContainer) => {
           let currentCycle = data.state.currentCycle;
+          let pastCycles = data.state.pastCycles;
           return (
             <View style={{width: '100%'}}>
               {currentCycle ? (
@@ -69,6 +72,15 @@ export default class HomeScreen extends React.Component<HomeScreenProps, HomeScr
                   </Button>
                 </View>
               )}
+              <List>
+                  {pastCycles && pastCycles.map((pastCycle, index) => {
+                    return (
+                      <ListItem key={index}>
+                        <Text>Completed Week: {pastCycle.week + 1} | Day: {pastCycle.day + 1}</Text>
+                      </ListItem>
+                    );
+                  })}
+              </List>
             </View>
           );
         }}
@@ -77,8 +89,14 @@ export default class HomeScreen extends React.Component<HomeScreenProps, HomeScr
   }
   
   render() {
+    console.log('render :');
     return (
       <Container>
+        <Header >
+          <Body>
+            <Title>Home</Title>
+          </Body>
+        </Header>
         <Content contentContainerStyle={styles.container}>
           { this.state.loaded ? this.renderContent() : <Spinner /> }
           <Button onPress={this.clear}>
@@ -93,7 +111,6 @@ export default class HomeScreen extends React.Component<HomeScreenProps, HomeScr
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#fff',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 5

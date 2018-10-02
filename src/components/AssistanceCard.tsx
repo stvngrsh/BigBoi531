@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { AssistanceLift } from '../Types';
 import { Card, CardItem, Text, Body } from 'native-base';
-import { Theme } from '../Theme';
 import { StyleSheet } from 'react-native';
 import MultiSetCard from './MulitSetCard';
 
@@ -10,13 +9,13 @@ export interface AssistanceCardProps {
   lift: AssistanceLift<any>[],
   startTimer: (timeRemaining: number) => Promise<boolean>,
   scrollRef: any,
-  finishedSets: boolean[],
+  finishedSets: boolean[][],
   finishSet: Function
 }
 
 export interface AssistanceCardState {
   expanded: boolean,
-  finishedSets: boolean[]
+  finishedSets: boolean[][]
 }
 
 export default class AssistanceCard extends React.Component<AssistanceCardProps, AssistanceCardState> {
@@ -37,16 +36,16 @@ export default class AssistanceCard extends React.Component<AssistanceCardProps,
       <Card>    
         <CardItem style={{justifyContent: 'space-between'}} header bordered button onPress={() => this.collapseExpand()}>
           <Text>{this.props.title}</Text>
-          { allSetsDone && <Text style={{color: Theme.success, fontWeight: 'bold'}}>Done</Text> }
+          { allSetsDone && <Text style={{fontWeight: 'bold'}}>Done</Text> }
         </CardItem>
         {
           this.state.expanded && 
             this.props.lift.map((lift, index) => {
 
               return (
-                <MultiSetCard 
-                  finishSet={this.props.finishSet}
-                  finishedSets={this.props.finishedSets}
+                <MultiSetCard
+                  finishSet={(setIndex: number) => this.props.finishSet(setIndex, index)}
+                  finishedSets={this.props.finishedSets[index]}
                   key={index}
                   reps={lift.reps}
                   weight={weight}

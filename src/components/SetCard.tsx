@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Card, CardItem, Text, Body, CheckBox, Icon } from 'native-base';
 import { Set, Lift } from '../Types';
 import { View, StyleSheet } from 'react-native';
-import { Theme } from '../Theme';
 import PlateCounter from './PlateCounter';
 import { Weight } from './Weight';
 
@@ -43,7 +42,7 @@ export default class SetCard extends React.Component<SetCardProps, SetCardState>
       <Card>
         <CardItem style={{justifyContent: 'space-between'}} header bordered button onPress={() => this.collapseExpand()}>
           <Text>{this.props.title}</Text>
-          { allSetsDone && <Text style={{color: Theme.success, fontWeight: 'bold'}}>Done</Text> }
+          { allSetsDone && <Text style={{fontWeight: 'bold'}}>Done</Text> }
         </CardItem>
         {
           this.state.expanded && 
@@ -103,8 +102,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     width: 30,
     height: 30,
-    margin: 5,
-    borderColor: Theme.lightGray
+    margin: 5
   },
   checkbox: {
     padding: 5,

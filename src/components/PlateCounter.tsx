@@ -1,7 +1,6 @@
 import React from 'react';
 import { Icon, Text, Thumbnail } from 'native-base';
 import { StyleSheet, View, Image } from 'react-native';
-import { Theme } from '../Theme';
 
 const PLATES = [45, 35, 25, 10, 5, 2.5];
 const BAR = 45;
@@ -70,8 +69,7 @@ const styles = StyleSheet.create({
     margin: 0,
     fontWeight: 'bold',
     fontSize: 18,
-    position: 'absolute',
-    color: Theme.lightBlue
+    position: 'absolute'
   },
   plate: {
     marginRight: 10

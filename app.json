@@ -2,8 +2,10 @@
   "expo": {
     "name": "BigBoi531",
     "sdkVersion": "28.0.0",
+    "icon": "./assets/app-icon.png",
     "orientation": "portrait",
     "primaryColor": "#fff",
+    "version": "0.0.1",
     "packagerOpts": {
       "assetExts": [
         "ttf",
@@ -16,6 +18,7 @@
       "transformer": "node_modules/react-native-typescript-transformer/index.js"
     },
     "ios": {
+      "bundleIdentifier": "com.stvngrsh.BigBoi531",
       "supportsTablet": true
     }
   }

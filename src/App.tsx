@@ -4,26 +4,54 @@ import DataContainer from './containers/DataContainer';
 import { createStackNavigator } from 'react-navigation';
 import HomeScreen, { HomeScreenProps } from './screens/HomeScreen';
 import LiftScreen, { LiftScreenProps } from './screens/LiftScreen';
-import { Root, Button, Text } from 'native-base';
+import { Root, Button, Text, StyleProvider } from 'native-base';
 import { View } from 'react-native';
 import { YellowBox } from 'react-native';
+import Expo from 'expo';
+
+//@ts-ignore
+import getTheme from '../native-base-theme/components';
+//@ts-ignore
+import platform from '../native-base-theme/variables/platform';
+
 YellowBox.ignoreWarnings(['Remote debugger']);
 
-let App = () => (
-    <Provider>
-      <Subscribe to={[DataContainer]}>
-        {(dataContainer: DataContainer) => 
-          <Root>
-            <StackNav dataContainer={dataContainer}/>
-          </Root>
-        }
-      </Subscribe>
-    </Provider>
-)
+
+
+export default class App extends React.Component<{}, {loading: boolean}> {
+  constructor(props: {}) {
+    super(props);
+    this.state = {loading: true};
+  }
   
-export default App;
-  
-  
+  async componentWillMount() {
+    await Expo.Font.loadAsync({
+      Roboto: require("native-base/Fonts/Roboto.ttf"),
+      Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
+      Ionicons: require("@expo/vector-icons/fonts/Ionicons.ttf"),
+    });
+    this.setState({loading: false});
+  }
+  render() {
+    if(this.state.loading) {
+      return <Expo.AppLoading />;
+    }
+    return (
+      <StyleProvider style={getTheme(platform)}>
+        <Provider>
+          <Subscribe to={[DataContainer]}>
+            {(dataContainer: DataContainer) => 
+              <Root>
+                <StackNav dataContainer={dataContainer}/>
+              </Root>
+            }
+          </Subscribe>
+        </Provider>
+      </StyleProvider>
+    );
+  }
+}  
+
 interface StackNavProps {
   dataContainer: DataContainer
 }
@@ -37,8 +65,8 @@ class StackNav extends React.Component<StackNavProps, any> {
     navigationOptions:({navigation}) => ({
       title: this.props.dataContainer.state.header,
     }),
-    headerMode: 'float',
-    initialRouteName: 'Home'
+    initialRouteName: 'Home',
+    headerMode: 'none'
   });
   
   public render() {

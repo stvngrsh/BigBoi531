@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Theme } from '../Theme';
 import { Text } from 'react-native';
 
 export interface WeightProps {

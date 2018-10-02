@@ -57,12 +57,12 @@ export class CycleData {
     finishedWarmups: boolean[][];
     finishedSets: boolean[][];
     finishedFSL: boolean[][];
-    finishedAssistance: boolean[][];
+    finishedAssistance: boolean[][][];
 
-    constructor() {
+    constructor(week: number, day: number) {
         this.template = "standard";
-        this.week = 0;
-        this.day = 0;
+        this.week = week;
+        this.day = day;
         this.finishedWarmups = [];
         this.finishedSets = [];
         this.finishedFSL = [];

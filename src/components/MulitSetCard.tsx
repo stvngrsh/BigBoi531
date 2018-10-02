@@ -2,8 +2,6 @@ import * as React from 'react';
 import { Card, CardItem, Text, Body, CheckBox } from 'native-base';
 import { Set, Lift } from '../Types';
 import { View, StyleSheet, findNodeHandle } from 'react-native';
-import { Theme } from '../Theme';
-import PlateCounter from './PlateCounter';
 import { Weight } from './Weight';
 
 export interface MultiSetCardProps {
@@ -55,7 +53,7 @@ export default class MultiSetCard extends React.Component<MultiSetCardProps, Mul
         {this.props.title && 
           <CardItem style={{justifyContent: 'space-between'}} header bordered button onPress={() => this.collapseExpand()}>
             <Text>{this.props.title}</Text>
-            { allSetsDone && <Text style={{color: Theme.success, fontWeight: 'bold'}}>Done</Text> }
+            { allSetsDone && <Text style={{fontWeight: 'bold'}}>Done</Text> }
           </CardItem>
         }
         {
