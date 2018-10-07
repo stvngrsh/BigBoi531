@@ -3,12 +3,9 @@ import * as NativeBase from 'native-base';
 declare module "native-base" {
   import * as React from "react";
   import * as ReactNative from "react-native";
-  
+
   namespace NativeBase {
-    
-    /**
-         * see Widget Tabs.js
-         */
+   
     interface Tabs {
       page?: number;
       renderTabBar?: Function;
@@ -29,4 +26,5 @@ declare module "native-base" {
       contentProps?: ReactNative.ScrollViewProperties;
     }
   }
+
 }

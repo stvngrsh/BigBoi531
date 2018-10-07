@@ -1,6 +1,6 @@
 import * as React from 'react';
 import DataContainer from '../containers/DataContainer';
-import { StyleSheet, Alert } from 'react-native';
+import { StyleSheet, Alert, ScrollView } from 'react-native';
 import Template from '../Template';
 import { Lift, AssistanceLift, AssistanceLifts } from '../Types';
 import {
@@ -9,14 +9,14 @@ import {
     Body,
     Tabs,
     Tab,
-    Content,
     Button,
     Text,
     Header,
     Title,
     Left,
     Right,
-    Icon
+    Icon,
+    Content
 } from 'native-base';
 import { Notifications, Permissions, Constants } from 'expo';
 import RestTimer from '../components/RestTimer';
@@ -25,6 +25,7 @@ import { differenceInSeconds } from 'date-fns';
 import AssistanceCard from '../components/AssistanceCard';
 import MultiSetCard from '../components/MulitSetCard';
 import { NavigationScreenProp } from 'react-navigation';
+import { Screens } from '../App';
 
 const BENCH_MAX = 150;
 const SQUAT_MAX = 230;
@@ -67,8 +68,6 @@ export interface LiftScreenProps {
 }
 
 export default class LiftScreen extends React.Component<LiftScreenProps, LiftScreenState> {
-  scrollRef: any[] = [];
-  scrollRef2: any;
   
   state: LiftScreenState = {
     tabNum: 0,
@@ -118,7 +117,7 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     let finishedFSL = [];
     for(let i = 0; i < lifts.length; i++) {
       let temp = [];
-      for(let i = 0; i < fsl; i++) {
+      for(let j = 0; j < fsl; j++) {
         temp.push(false);
       }
       finishedFSL.push(temp);
@@ -170,18 +169,6 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
       this.startTimer(90);
     }
   }
-  
-  scrollBottom = (scrollRef: any, scroll: boolean = false) => {
-    console.log('scrollRef :', scrollRef);
-    if(scrollRef) {
-      let {y} = scrollRef._root.position;
-      console.log('scrollRef :', scrollRef);
-      console.log('y :', y);
-      if(scroll) {
-        scrollRef._root.scrollToPosition(0 , y + 55);
-      }
-    }
-  }
 
   finishFSL = (setIndex: number, liftIndex: number) => {
     let finishedFSL = [...this.state.finishedFSL];
@@ -191,9 +178,7 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     this.setState({finishedFSL: finishedFSL});
     
     if(finishedFSLInner[setIndex] === true) {
-      this.startTimer(45).then((scroll) => {
-        this.scrollBottom(this.scrollRef[liftIndex], scroll);
-      });
+      this.startTimer(45);
     }
   }
 
@@ -208,9 +193,7 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     this.setState({finishedAssistance: finishedAssistance});
     
     if(finishedAssistanceInnerInner[setIndex] === true) {
-      this.startTimer(45).then((scroll) => {
-        this.scrollBottom(this.scrollRef[liftIndex], scroll);
-      });
+      this.startTimer(45);
     }
   }
   
@@ -235,24 +218,21 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     }
   }
 
-  startTimer = (timeRemaining: number): Promise<boolean> => {
-    return new Promise((resolve) => {
-      clearInterval(this.state.timer);
-      Notifications.cancelAllScheduledNotificationsAsync();
+  startTimer = (timeRemaining: number) => {
+    clearInterval(this.state.timer);
+    Notifications.cancelAllScheduledNotificationsAsync();
 
-      let timer = setInterval(this.tick, 1000);
-      let t = new Date();
-      t.setSeconds(t.getSeconds() + timeRemaining);
-      const schedulingOptions = {time: t};
-      Notifications.scheduleLocalNotificationAsync(localNotification, schedulingOptions);
-    
-      let scroll: boolean = !this.state.timer;
-      this.setState({
-        timer,
-        stopTime: t,
-        timeRemaining: timeRemaining - 1
-      }, () => resolve(scroll));
-    })
+    let timer = setInterval(this.tick, 1000);
+    let t = new Date();
+    t.setSeconds(t.getSeconds() + timeRemaining);
+    const schedulingOptions = {time: t};
+    Notifications.scheduleLocalNotificationAsync(localNotification, schedulingOptions);
+  
+    this.setState({
+      timer,
+      stopTime: t,
+      timeRemaining: timeRemaining - 1
+    });
   }
 
   getWeight = (percentage: number, lift: Lift) => {
@@ -292,6 +272,11 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     )
   }
 
+  goToSettings = () => {
+    const { navigate } = this.props.navigation;
+    navigate(Screens.SETTINGS);
+  }
+
   public render() {
     let currentCycle = this.props.dataContainer.state.currentCycle;
     if(!currentCycle) {
@@ -321,21 +306,20 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
             <Title>Workout Day {day + 1}</Title>
           </Body>
           <Right>
-            <Button transparent>
-              <Icon name='menu' />
+            <Button onPress={this.goToSettings} transparent>
+              <Icon name='options' />
             </Button>
           </Right>
         </Header>
         <Tabs locked page={this.state.tabNum} onChangeTab={(tab: any) => this.setState({tabNum: tab.i})}>
           {lifts.map((lift, index) => {
-            let scrollRef;
             return (
               <Tab key={index} heading={lift} >
-                <Content ref={ref => (this.scrollRef[index] = ref)} >                    
+                <Content >                    
                   <SetCard 
                     finishSet={(setIndex: number) => this.finishWarmup(setIndex, index)}
                     finishedSets={this.state.finishedWarmups[index]}
-                    title="Warmup Sets" 
+                    title="Warmup Sets!!" 
                     sets={warmupSets} 
                     lift={lift} 
                     getWeight={this.getWeight}/>
@@ -352,7 +336,7 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
                     reps={mainSets[0].reps} 
                     weight={this.getWeight(mainSets[0].percent, lift)}
                     sets={fsl}
-                    title="First Set Last"/>
+                    title="FSL Sets"/>
                   <Body style={{width: "100%", flexDirection: 'row', justifyContent: 'center'}}>
                     <Button style={{margin: 15, alignSelf: "center"}} onPress={() => this.setState({tabNum: this.state.tabNum + 1})}>
                       <Text>{index === lifts.length - 1 ? 'Assistance Lifts': 'Next Lift'}</Text>
@@ -363,7 +347,7 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
             );
           })}
           <Tab heading="Secondarys">
-            <Content ref={ref => (this.scrollRef2 = ref)}>
+            <Content>
               {Object.keys(assistance).map((assistanceKey, index) => {
                 let lift;
                 let title;
@@ -390,7 +374,7 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
                     break;
                 }
                 return (
-                  <AssistanceCard key={index} lift={lift as any} title={title as string} startTimer={this.startTimer} scrollRef={this.scrollRef2} finishedSets={this.state.finishedAssistance[index]} finishSet={(setIndex: number, liftIndex: number) => this.finishAssistance(setIndex, liftIndex, index)}/>
+                  <AssistanceCard key={index} lift={lift as any} title={title as string} finishedSets={this.state.finishedAssistance[index]} finishSet={(setIndex: number, liftIndex: number) => this.finishAssistance(setIndex, liftIndex, index)}/>
                 );
               })}
               <Body style={{width: "100%", flexDirection: 'row', justifyContent: 'center'}}>

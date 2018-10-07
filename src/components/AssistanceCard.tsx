@@ -7,8 +7,6 @@ import MultiSetCard from './MulitSetCard';
 export interface AssistanceCardProps {
   title: string, 
   lift: AssistanceLift<any>[],
-  startTimer: (timeRemaining: number) => Promise<boolean>,
-  scrollRef: any,
   finishedSets: boolean[][],
   finishSet: Function
 }

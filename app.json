@@ -5,7 +5,7 @@
     "icon": "./src/assets/app-icon.png",
     "orientation": "portrait",
     "primaryColor": "#fff",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "packagerOpts": {
       "assetExts": [
         "ttf",

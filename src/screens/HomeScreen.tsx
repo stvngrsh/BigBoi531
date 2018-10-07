@@ -3,8 +3,9 @@ import { StyleSheet } from 'react-native';
 import { NavigationScreenProp } from 'react-navigation';
 import Template from '../Template';
 import DataContainer from '../containers/DataContainer';
-import { View, Button, Text, Icon, Spinner, Container, Content, Header, Title, Body, List, ListItem} from 'native-base';
+import { View, Button, Text, Icon, Spinner, Container, Content, Header, Title, Body, List, ListItem, Left, Right} from 'native-base';
 import { Subscribe } from 'unstated';
+import { Screens } from '../App';
 
 export interface HomeScreenProps {
   dataContainer: DataContainer,
@@ -45,7 +46,7 @@ export default class HomeScreen extends React.Component<HomeScreenProps, HomeScr
 
   openDay = () => {
     const { navigate } = this.props.navigation;
-    navigate("Lift");
+    navigate(Screens.LIFT);
   }
 
   renderContent() {
@@ -87,15 +88,27 @@ export default class HomeScreen extends React.Component<HomeScreenProps, HomeScr
       </Subscribe>
     )
   }
+
+  goToSettings = () => {
+    const { navigate } = this.props.navigation;
+    navigate(Screens.SETTINGS);
+  }
   
   render() {
     console.log('render :');
     return (
       <Container>
         <Header >
+          <Left>
+          </Left>
           <Body>
             <Title>Home</Title>
           </Body>
+          <Right>
+            <Button onPress={this.goToSettings} transparent>
+              <Icon name='options' />
+            </Button>
+          </Right>
         </Header>
         <Content contentContainerStyle={styles.container}>
           { this.state.loaded ? this.renderContent() : <Spinner /> }

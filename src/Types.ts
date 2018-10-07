@@ -70,6 +70,34 @@ export class CycleData {
     }
 }
 
+export class RestTimes {
+    warmup: number;
+    mainSet: number;
+    fsl: number;
+    secondary: number;
+
+    constructor() {
+        this.warmup = 30;
+        this.mainSet = 90;
+        this.fsl = 45;
+        this.secondary = 60;
+    }
+}
+
+export class OneRepMax {
+    bench: number;
+    squat: number;
+    press: number;
+    deads: number;
+
+    constructor() {
+        this.bench = 100;
+        this.squat = 100;
+        this.press = 100;
+        this.deads = 100;
+    }
+}
+
 export class Cycle {
     weeks: Week[];
     progression: Map<Lift, number>;

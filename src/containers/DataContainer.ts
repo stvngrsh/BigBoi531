@@ -1,15 +1,19 @@
 import { Container } from "unstated";
-import { Lift } from "../Types";
+import { Lift, OneRepMax, RestTimes } from "../Types";
 import { AsyncStorage } from "react-native"
 import { CycleData } from '../../src/Types';
 
 const CURRENT_CYCLE = "CURRENT_CYCLE";
 const PAST_CYCLES = "PAST_CYCLES";
+const ONE_REP_MAX = "ONE_REP_MAX";
+const REST_TIMES = "REST_TIMES";
 
 export type DataContainerState = {
     header: string,
     currentCycle?: CycleData,
-    pastCycles?: CycleData[]
+    pastCycles?: CycleData[],
+    oneRepMax?: OneRepMax,
+    restTimes?: RestTimes
 }
 
 export default class DataContainer extends Container<DataContainerState> {
@@ -18,8 +22,54 @@ export default class DataContainer extends Container<DataContainerState> {
         super();
         
         this.state = {
-            header: "Day 1"
+            header: "Day 1",
         }
+    }
+
+    getOneRepMax = async () => {
+        return new Promise(async (res, rej) => {
+            if(this.state.oneRepMax) {
+                res();
+            } else {
+                try {
+                    let ormJson = await AsyncStorage.getItem(ONE_REP_MAX);
+                    if(ormJson !== null) {
+                        let orm = JSON.parse(ormJson);
+                        this.setState({oneRepMax: orm}, () => res());
+                    } else {
+                        let orm = new OneRepMax();
+                        AsyncStorage.setItem(ONE_REP_MAX, JSON.stringify(orm));
+                        this.setState({oneRepMax: orm}, () => res());
+                    }
+                } catch(e) {
+                    rej();
+                    console.error(e);
+                }
+            }
+        });
+    }
+
+    getRestTimes = async () => {
+        return new Promise(async (res, rej) => {
+            if(this.state.restTimes) {
+                res();
+            } else {
+                try {
+                    let restJson = await AsyncStorage.getItem(REST_TIMES);
+                    if(restJson !== null) {
+                        let restTimes = JSON.parse(restJson);
+                        this.setState({restTimes: restTimes}, () => res());
+                    } else {
+                        let restTimes = new RestTimes();
+                        AsyncStorage.setItem(REST_TIMES, JSON.stringify(restTimes));
+                        this.setState({restTimes: restTimes}, () => res());
+                    }
+                } catch(e) {
+                    rej();
+                    console.error(e);
+                }
+            }
+        });
     }
 
     addNewCycle = () => {

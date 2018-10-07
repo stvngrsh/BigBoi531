@@ -13,6 +13,9 @@ import Expo from 'expo';
 import getTheme from '../native-base-theme/components';
 //@ts-ignore
 import platform from '../native-base-theme/variables/platform';
+import SettingsScreen, { SettingsScreenProps } from './screens/SettingsScreen';
+import OneRepMaxScreen, { OneRepMaxScreenProps } from './screens/OneRepMaxScreen';
+import RestTimeScreen, { RestTimeScreenProps } from './screens/RestTimeScreen';
 
 YellowBox.ignoreWarnings(['Remote debugger']);
 
@@ -56,11 +59,22 @@ interface StackNavProps {
   dataContainer: DataContainer
 }
 
+export enum Screens {
+  HOME = "Home",
+  LIFT = "Lift",
+  SETTINGS = "Settings",
+  ONE_REP_MAX = "OneRepMax",
+  REST_TIMES = "RestTimes"
+}
+
 class StackNav extends React.Component<StackNavProps, any> {
   
   stackNav = createStackNavigator({
-    Home: { screen: (props: HomeScreenProps) => <HomeScreen {...props} dataContainer={this.props.dataContainer}/> },
-    Lift: { screen: (props: LiftScreenProps) => <LiftScreen {...props} dataContainer={this.props.dataContainer}/> }
+    [Screens.HOME]: { screen: (props: HomeScreenProps) => <HomeScreen {...props} dataContainer={this.props.dataContainer}/> },
+    [Screens.LIFT]: { screen: (props: LiftScreenProps) => <LiftScreen {...props} dataContainer={this.props.dataContainer}/> },
+    [Screens.SETTINGS]: { screen: (props: SettingsScreenProps) => <SettingsScreen {...props} dataContainer={this.props.dataContainer}/> },
+    [Screens.ONE_REP_MAX]: { screen: (props: OneRepMaxScreenProps) => <OneRepMaxScreen {...props} dataContainer={this.props.dataContainer}/> },
+    [Screens.REST_TIMES]: { screen: (props: RestTimeScreenProps) => <RestTimeScreen {...props} dataContainer={this.props.dataContainer}/> },
   }, {
     navigationOptions:({navigation}) => ({
       title: this.props.dataContainer.state.header,
