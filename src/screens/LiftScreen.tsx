@@ -2,7 +2,7 @@ import * as React from 'react';
 import DataContainer from '../containers/DataContainer';
 import { StyleSheet, Alert, ScrollView } from 'react-native';
 import Template from '../Template';
-import { Lift, AssistanceLift, AssistanceLifts } from '../Types';
+import { Lift, AssistanceLift, AssistanceLifts, OneRepMax } from '../Types';
 import {
     Container,
     Card,
@@ -16,7 +16,9 @@ import {
     Left,
     Right,
     Icon,
-    Content
+    Content,
+    Spinner,
+    CardItem
 } from 'native-base';
 import { Notifications, Permissions, Constants } from 'expo';
 import RestTimer from '../components/RestTimer';
@@ -26,6 +28,7 @@ import AssistanceCard from '../components/AssistanceCard';
 import MultiSetCard from '../components/MulitSetCard';
 import { NavigationScreenProp } from 'react-navigation';
 import { Screens } from '../App';
+import { Subscribe } from 'unstated';
 
 const BENCH_MAX = 150;
 const SQUAT_MAX = 230;
@@ -144,6 +147,13 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
       finishedFSL: finishedFSL,
       finishedAssistance: finishedAssistance
     });
+
+    if(!this.props.dataContainer.state.restTimes) {
+      this.props.dataContainer.getRestTimes();
+    }
+    if(!this.props.dataContainer.state.oneRepMax) {
+      this.props.dataContainer.getOneRepMax();
+    }
   }
 
   finishWarmup = (setIndex: number, liftIndex: number) => {
@@ -153,8 +163,9 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     finishedWarmups[liftIndex] = finishedWarmupsInner;
     this.setState({finishedWarmups: finishedWarmups});
     
-    if(finishedWarmupsInner[setIndex] = true) {
-      this.startTimer(30);
+    if(finishedWarmupsInner[setIndex] === true) {
+      let restTimes = this.props.dataContainer.state.restTimes;
+      this.startTimer(restTimes ? restTimes.warmup : 30);
     }
   }
 
@@ -166,7 +177,8 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     this.setState({finishedSets: finishedSets});
     
     if(finishedSetsInner[setIndex] === true) {
-      this.startTimer(90);
+      let restTimes = this.props.dataContainer.state.restTimes;
+      this.startTimer(restTimes ? restTimes.mainSet : 90);
     }
   }
 
@@ -178,7 +190,8 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     this.setState({finishedFSL: finishedFSL});
     
     if(finishedFSLInner[setIndex] === true) {
-      this.startTimer(45);
+      let restTimes = this.props.dataContainer.state.restTimes;
+      this.startTimer(restTimes ? restTimes.fsl : 45);
     }
   }
 
@@ -193,7 +206,8 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     this.setState({finishedAssistance: finishedAssistance});
     
     if(finishedAssistanceInnerInner[setIndex] === true) {
-      this.startTimer(45);
+      let restTimes = this.props.dataContainer.state.restTimes;
+      this.startTimer(restTimes ? restTimes.secondary : 45);
     }
   }
   
@@ -235,21 +249,21 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
     });
   }
 
-  getWeight = (percentage: number, lift: Lift) => {
+  getWeight = (percentage: number, lift: Lift, oneRepMax: OneRepMax) => {
     let multiplier = percentage / 100;
     let amount = 0;
     switch(lift) {
       case Lift.BENCH:
-        amount = BENCH_MAX * multiplier;
+        amount = oneRepMax.bench * multiplier;
         break;
       case Lift.SQUAT:
-        amount = SQUAT_MAX * multiplier;
+        amount = oneRepMax.squat * multiplier;
         break;
       case Lift.PRESS:
-        amount = PRESS_MAX * multiplier;
+        amount = oneRepMax.press * multiplier;
         break;
       case Lift.DEADS:
-        amount = DEADS_MAX * multiplier;
+        amount = oneRepMax.deads * multiplier;
         break;
     }
     return Math.floor(amount / LOWEST_WEIGHT) * LOWEST_WEIGHT;
@@ -295,99 +309,122 @@ export default class LiftScreen extends React.Component<LiftScreenProps, LiftScr
 
     console.log('assistance :', assistance);
     return (
-      <Container>
-        <Header >
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>Workout Day {day + 1}</Title>
-          </Body>
-          <Right>
-            <Button onPress={this.goToSettings} transparent>
-              <Icon name='options' />
-            </Button>
-          </Right>
-        </Header>
-        <Tabs locked page={this.state.tabNum} onChangeTab={(tab: any) => this.setState({tabNum: tab.i})}>
-          {lifts.map((lift, index) => {
+      <Subscribe to={[DataContainer]}>
+        {(data: DataContainer) => {
+          let oneRepMax = data.state.oneRepMax as OneRepMax;
+          if(oneRepMax) {
             return (
-              <Tab key={index} heading={lift} >
-                <Content >                    
-                  <SetCard 
-                    finishSet={(setIndex: number) => this.finishWarmup(setIndex, index)}
-                    finishedSets={this.state.finishedWarmups[index]}
-                    title="Warmup Sets!!" 
-                    sets={warmupSets} 
-                    lift={lift} 
-                    getWeight={this.getWeight}/>
-                  <SetCard 
-                    finishSet={(setIndex: number) => this.finishSet(setIndex, index)}
-                    finishedSets={this.state.finishedSets[index]}
-                    title="Main Sets" 
-                    sets={mainSets} 
-                    lift={lift} 
-                    getWeight={this.getWeight}/>
-                  <MultiSetCard 
-                    finishSet={(setIndex: number) => this.finishFSL(setIndex, index)}
-                    finishedSets={this.state.finishedFSL[index]}
-                    reps={mainSets[0].reps} 
-                    weight={this.getWeight(mainSets[0].percent, lift)}
-                    sets={fsl}
-                    title="FSL Sets"/>
-                  <Body style={{width: "100%", flexDirection: 'row', justifyContent: 'center'}}>
-                    <Button style={{margin: 15, alignSelf: "center"}} onPress={() => this.setState({tabNum: this.state.tabNum + 1})}>
-                      <Text>{index === lifts.length - 1 ? 'Assistance Lifts': 'Next Lift'}</Text>
+              <Container>
+                <Header >
+                  <Left>
+                    <Button transparent onPress={() => this.props.navigation.pop()}>
+                      <Icon name="arrow-back" />
                     </Button>
+                  </Left>
+                  <Body>
+                    <Title>Workout Day {day + 1}</Title>
                   </Body>
-                </Content>
-              </Tab>
+                  <Right>
+                    <Button onPress={this.goToSettings} transparent>
+                      <Icon name='options' />
+                    </Button>
+                  </Right>
+                </Header>
+                <Tabs locked page={this.state.tabNum} onChangeTab={(tab: any) => this.setState({tabNum: tab.i})}>
+                  {lifts.map((lift, index) => {
+                    return (
+                      <Tab key={index} heading={lift} >
+                        <Content >                    
+                          <Card>
+                            <CardItem>
+                              <Title>
+                                Training Max:&nbps;
+                                {lift === Lift.BENCH && oneRepMax.bench}
+                                {lift === Lift.SQUAT && oneRepMax.squat}
+                                {lift === Lift.PRESS && oneRepMax.press}
+                                {lift === Lift.DEADS && oneRepMax.deads}
+                                &nbps;lbs
+                              </Title>
+                            </CardItem>
+                          </Card>
+                          <SetCard 
+                            finishSet={(setIndex: number) => this.finishWarmup(setIndex, index)}
+                            finishedSets={this.state.finishedWarmups[index]}
+                            title="Warmup Sets!!" 
+                            sets={warmupSets} 
+                            lift={lift} 
+                            getWeight={(percentage: number, lift: Lift) => this.getWeight(percentage, lift, oneRepMax)}/>
+                          <SetCard 
+                            finishSet={(setIndex: number) => this.finishSet(setIndex, index)}
+                            finishedSets={this.state.finishedSets[index]}
+                            title="Main Sets" 
+                            sets={mainSets} 
+                            lift={lift} 
+                            getWeight={(percentage: number, lift: Lift) => this.getWeight(percentage, lift, oneRepMax)}/>
+                          <MultiSetCard 
+                            finishSet={(setIndex: number) => this.finishFSL(setIndex, index)}
+                            finishedSets={this.state.finishedFSL[index]}
+                            reps={mainSets[0].reps} 
+                            weight={this.getWeight(mainSets[0].percent, lift, oneRepMax)}
+                            sets={fsl}
+                            title="FSL Sets"/>
+                          <Body style={{width: "100%", flexDirection: 'row', justifyContent: 'center'}}>
+                            <Button style={{margin: 15, alignSelf: "center"}} onPress={() => this.setState({tabNum: this.state.tabNum + 1})}>
+                              <Text>{index === lifts.length - 1 ? 'Assistance Lifts': 'Next Lift'}</Text>
+                            </Button>
+                          </Body>
+                        </Content>
+                      </Tab>
+                    );
+                  })}
+                  <Tab heading="Secondarys">
+                    <Content>
+                      {Object.keys(assistance).map((assistanceKey, index) => {
+                        let lift;
+                        let title;
+                        switch(assistanceKey) {
+                          case "push":
+                            lift = assistance.push;
+                            title = "Push Lifts";
+                            break;
+                          case "pull":
+                            lift = assistance.pull;
+                            title = "Pull Lifts";
+                            break;
+                          case "core":
+                            lift = assistance.core;
+                            title = "Core / Single Leg";
+                            break;
+                          case "grip":
+                            lift = assistance.grip;
+                            title = "Grip Workouts";
+                            break;
+                          case "calf":
+                            lift = assistance.calf;
+                            title = "Calc Workouts";
+                            break;
+                        }
+                        return (
+                          <AssistanceCard key={index} lift={lift as any} title={title as string} finishedSets={this.state.finishedAssistance[index]} finishSet={(setIndex: number, liftIndex: number) => this.finishAssistance(setIndex, liftIndex, index)}/>
+                        );
+                      })}
+                      <Body style={{width: "100%", flexDirection: 'row', justifyContent: 'center'}}>
+                        <Button style={{margin: 15, alignSelf: "center"}} onPress={this.completeWorkout}>
+                          <Text>Complete Workout</Text>
+                        </Button>
+                      </Body>
+                    </Content>
+                  </Tab>
+                </Tabs>
+                {this.state.timer && <RestTimer timeRemaining={this.state.timeRemaining} /> }
+              </Container>
             );
-          })}
-          <Tab heading="Secondarys">
-            <Content>
-              {Object.keys(assistance).map((assistanceKey, index) => {
-                let lift;
-                let title;
-                switch(assistanceKey) {
-                  case "push":
-                    lift = assistance.push;
-                    title = "Push Lifts";
-                    break;
-                  case "pull":
-                    lift = assistance.pull;
-                    title = "Pull Lifts";
-                    break;
-                  case "core":
-                    lift = assistance.core;
-                    title = "Core / Single Leg";
-                    break;
-                  case "grip":
-                    lift = assistance.grip;
-                    title = "Grip Workouts";
-                    break;
-                  case "calf":
-                    lift = assistance.calf;
-                    title = "Calc Workouts";
-                    break;
-                }
-                return (
-                  <AssistanceCard key={index} lift={lift as any} title={title as string} finishedSets={this.state.finishedAssistance[index]} finishSet={(setIndex: number, liftIndex: number) => this.finishAssistance(setIndex, liftIndex, index)}/>
-                );
-              })}
-              <Body style={{width: "100%", flexDirection: 'row', justifyContent: 'center'}}>
-                <Button style={{margin: 15, alignSelf: "center"}} onPress={this.completeWorkout}>
-                  <Text>Complete Workout</Text>
-                </Button>
-              </Body>
-            </Content>
-          </Tab>
-        </Tabs>
-        {this.state.timer && <RestTimer timeRemaining={this.state.timeRemaining} /> }
-      </Container>
-    );
+          }
+          data.getOneRepMax();
+          return <Spinner />;
+        }}
+      </Subscribe>
+    )
   }
 }
 

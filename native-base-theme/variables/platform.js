@@ -19,7 +19,8 @@ export const Colors = {
   light: '#F5F8FA',
   dark: '#141D26',
   white: '#FFFFFF',
-  black: '#000000'
+  black: '#000000',
+  gray: '#808080'
 }
 
 export default {

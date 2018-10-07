@@ -372,7 +372,7 @@ export default (variables = variable) => {
       "NativeBase.Right": {
         "NativeBase.Text": {
           textAlign: "center",
-          color: "#8F8E95",
+          color: variables.listNoteColor,
           fontSize: 17
         },
         "NativeBase.IconNB": {

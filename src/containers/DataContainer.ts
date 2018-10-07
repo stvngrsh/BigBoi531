@@ -49,6 +49,18 @@ export default class DataContainer extends Container<DataContainerState> {
         });
     }
 
+    setOneRepMax = async (values: string[]) => {
+        let oneRepMax: OneRepMax = {
+            bench: parseInt(values[0]),
+            squat: parseInt(values[1]),
+            press: parseInt(values[2]),
+            deads: parseInt(values[3])
+        }
+        AsyncStorage.setItem(ONE_REP_MAX, JSON.stringify(oneRepMax)).then(() => {
+            this.setState({oneRepMax: oneRepMax}, () => console.log(this.state.oneRepMax));
+        });
+    }
+
     getRestTimes = async () => {
         return new Promise(async (res, rej) => {
             if(this.state.restTimes) {
@@ -69,6 +81,18 @@ export default class DataContainer extends Container<DataContainerState> {
                     console.error(e);
                 }
             }
+        });
+    }
+
+    setRestTimes = async (values: string[]) => {
+        let restTimes: RestTimes = {
+            warmup: parseInt(values[0]),
+            mainSet: parseInt(values[1]),
+            fsl: parseInt(values[2]),
+            secondary: parseInt(values[3])
+        }
+        AsyncStorage.setItem(REST_TIMES, JSON.stringify(restTimes)).then(() => {
+            this.setState({restTimes: restTimes}, () => console.log(this.state.restTimes));
         });
     }
 

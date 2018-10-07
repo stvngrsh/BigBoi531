@@ -13,115 +13,163 @@ export interface RestTimeScreenProps {
 };
 
 export interface RestTimeScreenState {
-  text: string
+  values: string[]
 }
 
 export default class RestTimeScreen extends React.Component<RestTimeScreenProps, RestTimeScreenState> {
   
   state: RestTimeScreenState = {
-    text: "30"
+    values: []
+  }
+
+  
+  componentWillMount() {
+    let values = this.props.dataContainer.state.restTimes;
+    if(values) {
+      this.setState({
+        values: [
+          values.warmup.toString(), 
+          values.mainSet.toString(), 
+          values.fsl.toString(),
+          values.secondary.toString()
+        ]
+      })
+    }
   }
   
   edit = (i: number) => {
-    
+   
+  }
+
+  changeValue = (i: number, value: string) => {
+    let values = [...this.state.values];
+    values[i] = value;
+    this.setState({values});
   }
   
+  saveChanges = () => {
+    this.props.dataContainer.setRestTimes(this.state.values);
+  }
+
   renderContent() {
-    let restTimes = this.props.dataContainer.state.restTimes as RestTimes;
     return (
       <Subscribe to={[DataContainer]} >
         {(data: DataContainer) => {
-          return (
-            <View style={{width: '100%'}}>
-              <List>
-                <ListItem icon onPress={() => this.edit(0)}>
-                  <Body>
-                    <Text>Warmup Sets</Text>
-                  </Body>
-                  <Right>
-                    {/* {!this.state.editing[0] && <Text>{restTimes.warmup} seconds</Text>}
-                    {this.state.editing[0] && 
-                      <View style={styles.input}>
-                        <TextInput
-                        // style={{height: 40, borderColor: 'gray', borderWidth: 1}}
-                        onChangeText={(text) => this.setState({text})}
-                        value={this.state.text}
+          let restTimes = data.state.restTimes;
+          if(restTimes) {
+            return (
+              <View style={{width: '100%'}}>
+                <List>
+                  <ListItem icon >
+                    <Body>
+                      <Text>Warmup Sets</Text>
+                    </Body>
+                    <Right style={{flexDirection: 'row'}}>
+                      <TextInput
+                        onEndEditing={this.saveChanges}
+                        keyboardType="number-pad"
+                        style={styles.inlineInput}
+                        onChangeText={(value) => this.changeValue(0, value)}
+                        value={this.state.values[0]}
+                        />
+                      <Text> seconds</Text>
+                    </Right>
+                  </ListItem>
+                  <ListItem icon>
+                    <Body>
+                      <Text>Main Sets</Text>
+                    </Body>
+                    <Right style={{flexDirection: 'row'}}>
+                      <TextInput
+                        onEndEditing={this.saveChanges}
+                        keyboardType="number-pad"
+                        style={styles.inlineInput}
+                        onChangeText={(value) => this.changeValue(1, value)}
+                        value={this.state.values[1]}
                         />
                         <Text> seconds</Text>
-                      </View>
-                    } */}
-                  </Right>
-                </ListItem>
-                <ListItem icon>
-                <Body>
-                <Text>Main Sets</Text>
-                </Body>
-                <Right>
-                <Text>{restTimes.mainSet} seconds</Text>
-                </Right>
-                </ListItem>
-                <ListItem icon>
-                <Body>
-                <Text>First Set Last Sets</Text>
-                </Body>
-                <Right>
-                <Text>{restTimes.fsl} seconds</Text>
-                </Right>
-                </ListItem>
-                <ListItem icon>
-                <Body>
-                <Text>Assistance Sets</Text>
-                </Body>
-                <Right>
-                <Text>{restTimes.secondary} seconds</Text>
-                </Right>
-                </ListItem>
-              </List>
-            </View>
+                    </Right>
+                  </ListItem>
+                  <ListItem icon>
+                    <Body>
+                      <Text>First Set Last Sets</Text>
+                    </Body>
+                    <Right style={{flexDirection: 'row'}}>
+                      <TextInput
+                        onEndEditing={this.saveChanges}
+                        keyboardType="number-pad"
+                        style={styles.inlineInput}
+                        onChangeText={(value) => this.changeValue(2, value)}
+                        value={this.state.values[2]}
+                        />
+                      <Text> seconds</Text>
+                    </Right>
+                  </ListItem>
+                  <ListItem icon>
+                    <Body>
+                      <Text>Assistance Sets</Text>
+                    </Body>
+                    <Right style={{flexDirection: 'row'}}>
+                      <TextInput
+                        onEndEditing={this.saveChanges}
+                        keyboardType="number-pad"
+                        style={styles.inlineInput}
+                        onChangeText={(value) => this.changeValue(3, value)}
+                        value={this.state.values[3]}
+                        />
+                      <Text> seconds</Text>
+                    </Right>
+                  </ListItem>
+                </List>
+              </View>
             );
-          }}
-        </Subscribe>
-        )
-      }
+          }
+          this.props.dataContainer.getRestTimes();
+          return '';
+        }}
+      </Subscribe>
+    )
+  }
       
-      render() {
-        return (
-          <Container>
-          <Header >
+  render() {
+    return (
+      <Container>
+        <Header >
           <Left>
-          <Button transparent onPress={() => this.props.navigation.pop()}>
-          <Icon name="arrow-back" />
-          </Button>  
+            <Button transparent onPress={() => this.props.navigation.pop()}>
+              <Icon name="arrow-back" />
+            </Button>  
           </Left>
           <Body>
-          <Title>Settings</Title>
+            <Title>Settings</Title>
           </Body>
           <Right>
           </Right>
-          </Header>        
-          <Content contentContainerStyle={styles.container}>
+        </Header>        
+        <Content contentContainerStyle={styles.container}>
           {this.renderContent()}
-          </Content>
-          </Container>
-          );
-        }
-      }
+        </Content>
+      </Container>
+    );
+  }
+}
       
-      const styles = StyleSheet.create({
-        container: {
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 5
-        }, 
-        spanButton: { 
-          flexDirection: 'column',
-          width: "100%",
-          height: 70,
-          justifyContent: 'space-around'
-        },
-        input: {
-          flexDirection: 'row',
-        }
-      });
-      
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 5
+  }, 
+  spanButton: { 
+    flexDirection: 'column',
+    width: "100%",
+    height: 70,
+    justifyContent: 'space-around'
+  },
+  inlineInput: {
+    flexDirection: 'row',
+    color: '#808080',
+    fontSize: 18
+  }
+});
