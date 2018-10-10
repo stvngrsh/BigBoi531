@@ -1,14 +1,12 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { NavigationScreenProp } from 'react-navigation';
+import { NavigationScreenProp, NavigationScreenProps } from 'react-navigation';
 import Template from '../Template';
-import DataContainer from '../containers/DataContainer';
 import { View, Button, Text, Icon, Spinner, Container, Content, Header, Title, Body, List, ListItem, Left, Right} from 'native-base';
 import { Subscribe } from 'unstated';
 import { Screens } from '../App';
 
 export interface SettingsScreenProps {
-  dataContainer: DataContainer,
   navigation: NavigationScreenProp<any,any>
 };
 
@@ -21,6 +19,12 @@ export default class SettingsScreen extends React.Component<SettingsScreenProps,
   state: SettingsScreenState = {
 
   }
+
+  constructor(
+    props: NavigationScreenProps
+  ) {
+    super(props);
+  }
   
   componentDidMount() {
     
@@ -28,45 +32,37 @@ export default class SettingsScreen extends React.Component<SettingsScreenProps,
 
   goToORMScreen = async () => {
     const { navigate } = this.props.navigation;
-    await this.props.dataContainer.getOneRepMax();
     navigate(Screens.ONE_REP_MAX);
   }
 
   goToRestTimeScreen = async () => {
     const { navigate } = this.props.navigation;
-    await this.props.dataContainer.getRestTimes();
     navigate(Screens.REST_TIMES);
   }
   
   renderContent() {
     return (
-      <Subscribe to={[DataContainer]} >
-        {(data: DataContainer) => {
-          return (
-            <View style={{width: '100%'}}>
-              <List>
-                <ListItem icon onPress={this.goToORMScreen}>
-                  <Body>
-                    <Text>1-Rep Max Values</Text>
-                  </Body>
-                  <Right>
-                    <Icon active name="arrow-forward" />
-                  </Right>
-                </ListItem>
-                <ListItem icon onPress={this.goToRestTimeScreen}>
-                  <Body>
-                    <Text>Rest times</Text>
-                  </Body>
-                  <Right>
-                    <Icon active name="arrow-forward" />
-                  </Right>
-                </ListItem>
-              </List>
-            </View>
-          );
-       }}
-      </Subscribe>
-    )
+      <View style={{width: '100%'}}>
+        <List>
+          <ListItem icon onPress={this.goToORMScreen}>
+            <Body>
+              <Text>1-Rep Max Values</Text>
+            </Body>
+            <Right>
+              <Icon active name="arrow-forward" />
+            </Right>
+          </ListItem>
+          <ListItem icon onPress={this.goToRestTimeScreen}>
+            <Body>
+              <Text>Rest times</Text>
+            </Body>
+            <Right>
+              <Icon active name="arrow-forward" />
+            </Right>
+          </ListItem>
+        </List>
+      </View>
+    );
   }
             
   render() {

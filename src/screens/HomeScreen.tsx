@@ -1,37 +1,46 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { NavigationScreenProp } from 'react-navigation';
+import { NavigationScreenProp, NavigationScreenProps } from 'react-navigation';
 import Template from '../Template';
-import DataContainer from '../containers/DataContainer';
 import { View, Button, Text, Icon, Spinner, Container, Content, Header, Title, Body, List, ListItem, Left, Right} from 'native-base';
 import { Subscribe } from 'unstated';
 import { Screens } from '../App';
-
-export interface HomeScreenProps {
-  dataContainer: DataContainer,
-  navigation: NavigationScreenProp<any,any>
-};
+import Storage from '../containers/Storage';
+import { CycleData } from '../Types';
 
 export interface HomeScreenState {
   loaded: boolean;
+  currentCycle?: CycleData;
+  pastCycles?: CycleData[];
 }
 
-export default class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
+export default class HomeScreen extends React.Component<NavigationScreenProps, HomeScreenState> {
   
   state: HomeScreenState = {
     loaded: false
   }
 
+  storage: Storage;
+
+  constructor(
+    props: NavigationScreenProps
+  ) {
+    super(props);
+    this.storage = new Storage();
+  }
+  
+
   componentDidMount() {
-    this.props.dataContainer.getCurrentCycle().then(() => this.setState({loaded: true}));
-    this.props.dataContainer.getPastCycles();
+    this.storage.getCurrentCycle().then(currentCycle => this.setState({currentCycle: currentCycle}));
+    this.storage.getPastCycles().then(pastCycles => this.setState({pastCycles: pastCycles}));
   }
 
   clear = () => {
-    this.props.dataContainer.clearAll().then(() => {
-      this.setState({loaded: false});
-      this.props.dataContainer.getCurrentCycle().then(() => this.setState({loaded: true}));
-      this.props.dataContainer.getPastCycles();
+    this.storage.clearAll().then(() => {
+      this.setState({
+        currentCycle: undefined,
+        pastCycles: undefined
+      });
     });
   }
 
@@ -49,44 +58,41 @@ export default class HomeScreen extends React.Component<HomeScreenProps, HomeScr
     navigate(Screens.LIFT);
   }
 
+  addNewCycle = () => {
+    this.setState({currentCycle: this.storage.addNewCycle()});
+  }
+
   renderContent() {
+    
     return (
-      <Subscribe to={[DataContainer]} >
-        {(data: DataContainer) => {
-          let currentCycle = data.state.currentCycle;
-          let pastCycles = data.state.pastCycles;
-          return (
-            <View style={{width: '100%'}}>
-              {currentCycle ? (
-                <Button style={styles.spanButton} onPress={this.openDay}>
-                  <Text>Start Day {currentCycle.day + 1}</Text>
-                  <Text>Week: {currentCycle.week + 1} | Lifts: {this.getLifts(currentCycle.week, currentCycle.day)}</Text>
-                </Button>
-              ) : (
-                <View style={{width: '100%'}}>
-                  <Text style={{textAlign: 'center', margin: 10}}>
-                    Looks like this is your first time here. Click the button below to begin a new cycle.
-                  </Text>
-                  <Button onPress={this.props.dataContainer.addNewCycle} style={styles.spanButton}>
-                    <Icon name="add" />
-                    <Text>Start new cycle</Text>
-                  </Button>
-                </View>
-              )}
-              <List>
-                  {pastCycles && pastCycles.map((pastCycle, index) => {
-                    return (
-                      <ListItem key={index}>
-                        <Text>Completed Week: {pastCycle.week + 1} | Day: {pastCycle.day + 1}</Text>
-                      </ListItem>
-                    );
-                  })}
-              </List>
-            </View>
-          );
-        }}
-      </Subscribe>
-    )
+      <View style={{width: '100%'}}>
+        {this.state.currentCycle ? (
+          <Button style={styles.spanButton} onPress={this.openDay}>
+            <Text>Start Day {this.state.currentCycle.day + 1}</Text>
+            <Text>Week: {this.state.currentCycle.week + 1} | Lifts: {this.getLifts(this.state.currentCycle.week, this.state.currentCycle.day)}</Text>
+          </Button>
+        ) : (
+          <View style={{width: '100%'}}>
+            <Text style={{textAlign: 'center', margin: 10}}>
+              Looks like this is your first time here. Click the button below to begin a new cycle.
+            </Text>
+            <Button onPress={this.addNewCycle} style={styles.spanButton}>
+              <Icon name="add" />
+              <Text>Start new cycle</Text>
+            </Button>
+          </View>
+        )}
+        <List>
+            {this.state.pastCycles && this.state.pastCycles.map((pastCycle, index) => {
+              return (
+                <ListItem key={index}>
+                  <Text>Completed Week: {pastCycle.week + 1} | Day: {pastCycle.day + 1}</Text>
+                </ListItem>
+              );
+            })}
+        </List>
+      </View>
+    );
   }
 
   goToSettings = () => {
@@ -111,7 +117,7 @@ export default class HomeScreen extends React.Component<HomeScreenProps, HomeScr
           </Right>
         </Header>
         <Content contentContainerStyle={styles.container}>
-          { this.state.loaded ? this.renderContent() : <Spinner /> }
+          { this.renderContent() }
           <Button onPress={this.clear}>
             <Text>Clear all data</Text>
           </Button>

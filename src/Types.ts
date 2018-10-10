@@ -70,7 +70,12 @@ export class CycleData {
     }
 }
 
-export class RestTimes {
+interface INameToValueMap
+{
+    [key: string]: any;
+}
+
+export class RestTimes implements INameToValueMap {
     warmup: number;
     mainSet: number;
     fsl: number;
@@ -84,7 +89,7 @@ export class RestTimes {
     }
 }
 
-export class OneRepMax {
+export class OneRepMax implements INameToValueMap {
     bench: number;
     squat: number;
     press: number;

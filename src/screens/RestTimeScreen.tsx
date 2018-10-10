@@ -1,134 +1,139 @@
 import React from 'react';
 import { StyleSheet, TextInput } from 'react-native';
-import { NavigationScreenProp } from 'react-navigation';
+import { NavigationScreenProp, NavigationScreenProps } from 'react-navigation';
 import Template from '../Template';
-import DataContainer from '../containers/DataContainer';
 import { View, Button, Text, Icon, Spinner, Container, Content, Header, Title, Body, List, ListItem, Left, Right} from 'native-base';
 import { Subscribe } from 'unstated';
 import { RestTimes } from '../Types';
-
-export interface RestTimeScreenProps {
-  dataContainer: DataContainer,
-  navigation: NavigationScreenProp<any,any>
-};
+import Storage from '../containers/Storage';
 
 export interface RestTimeScreenState {
-  values: string[]
+  restTimes: RestTimes
 }
 
-export default class RestTimeScreen extends React.Component<RestTimeScreenProps, RestTimeScreenState> {
+export default class RestTimeScreen extends React.Component<NavigationScreenProps, RestTimeScreenState> {
   
+  storage: Storage;
+  warmupRef: any;
+  mainSetRef: any;
+  fslRef: any;
+  secondaryRef: any;
+
   state: RestTimeScreenState = {
-    values: []
+    restTimes: new RestTimes()
   }
 
+  constructor(
+    props: NavigationScreenProps
+  ) {
+    super(props);
+    this.storage = new Storage();
+    this.warmupRef = React.createRef();
+    this.mainSetRef = React.createRef();
+    this.fslRef = React.createRef();
+    this.secondaryRef = React.createRef();
+  }
   
-  componentWillMount() {
-    let values = this.props.dataContainer.state.restTimes;
-    if(values) {
-      this.setState({
-        values: [
-          values.warmup.toString(), 
-          values.mainSet.toString(), 
-          values.fsl.toString(),
-          values.secondary.toString()
-        ]
-      })
+  componentDidMount() {
+    this.storage.getRestTimes().then(restTimes => this.setState({restTimes}));
+  }
+  
+  edit = (ref: any) => {
+    ref.current.focus();
+  }
+
+  changeValue = (key: keyof RestTimes, value: string) => {
+    try {
+      let val = parseInt(value);
+      if(!isNaN(val)) {
+        let newRestTimes = { ...this.state.restTimes };
+        newRestTimes[key] = val;
+        this.setState({restTimes: newRestTimes});
+      }
+    } catch(e) {
+      console.error("Input must be an int");
     }
   }
   
-  edit = (i: number) => {
-   
-  }
-
-  changeValue = (i: number, value: string) => {
-    let values = [...this.state.values];
-    values[i] = value;
-    this.setState({values});
-  }
-  
-  saveChanges = () => {
-    this.props.dataContainer.setRestTimes(this.state.values);
+  saveChanges = (value: string) => {
+    if(value && value !== "") {
+      this.storage.setRestTimes(this.state.restTimes);
+    } else {
+      this.storage.getRestTimes().then(restTimes => this.setState({restTimes}));
+    }
   }
 
   renderContent() {
-    return (
-      <Subscribe to={[DataContainer]} >
-        {(data: DataContainer) => {
-          let restTimes = data.state.restTimes;
-          if(restTimes) {
-            return (
-              <View style={{width: '100%'}}>
-                <List>
-                  <ListItem icon >
-                    <Body>
-                      <Text>Warmup Sets</Text>
-                    </Body>
-                    <Right style={{flexDirection: 'row'}}>
-                      <TextInput
-                        onEndEditing={this.saveChanges}
-                        keyboardType="number-pad"
-                        style={styles.inlineInput}
-                        onChangeText={(value) => this.changeValue(0, value)}
-                        value={this.state.values[0]}
-                        />
-                      <Text> seconds</Text>
-                    </Right>
-                  </ListItem>
-                  <ListItem icon>
-                    <Body>
-                      <Text>Main Sets</Text>
-                    </Body>
-                    <Right style={{flexDirection: 'row'}}>
-                      <TextInput
-                        onEndEditing={this.saveChanges}
-                        keyboardType="number-pad"
-                        style={styles.inlineInput}
-                        onChangeText={(value) => this.changeValue(1, value)}
-                        value={this.state.values[1]}
-                        />
-                        <Text> seconds</Text>
-                    </Right>
-                  </ListItem>
-                  <ListItem icon>
-                    <Body>
-                      <Text>First Set Last Sets</Text>
-                    </Body>
-                    <Right style={{flexDirection: 'row'}}>
-                      <TextInput
-                        onEndEditing={this.saveChanges}
-                        keyboardType="number-pad"
-                        style={styles.inlineInput}
-                        onChangeText={(value) => this.changeValue(2, value)}
-                        value={this.state.values[2]}
-                        />
-                      <Text> seconds</Text>
-                    </Right>
-                  </ListItem>
-                  <ListItem icon>
-                    <Body>
-                      <Text>Assistance Sets</Text>
-                    </Body>
-                    <Right style={{flexDirection: 'row'}}>
-                      <TextInput
-                        onEndEditing={this.saveChanges}
-                        keyboardType="number-pad"
-                        style={styles.inlineInput}
-                        onChangeText={(value) => this.changeValue(3, value)}
-                        value={this.state.values[3]}
-                        />
-                      <Text> seconds</Text>
-                    </Right>
-                  </ListItem>
-                </List>
-              </View>
-            );
-          }
-          this.props.dataContainer.getRestTimes();
-          return '';
-        }}
-      </Subscribe>
-    )
+    let restTimes = this.state.restTimes;
+    if(restTimes) {
+      return (
+        <View style={{width: '100%'}}>
+          <List>
+          <ListItem icon onPress={() => this.edit(this.warmupRef)}>
+              <Body>
+                <Text>Warmup Sets</Text>
+              </Body>
+              <Right style={{flexDirection: 'row'}}>
+                <TextInput
+                  onEndEditing={(e) => this.saveChanges(e.nativeEvent.text)}
+                  keyboardType="number-pad"
+                  style={styles.inlineInput}
+                  onChangeText={(value) => this.changeValue('warmup', value)}
+                  value={this.state.restTimes.warmup.toString()}
+                  />
+                <Text> seconds</Text>
+              </Right>
+            </ListItem>
+            <ListItem icon onPress={() => this.edit(this.mainSetRef)}>
+              <Body>
+                <Text>Main Sets</Text>
+              </Body>
+              <Right style={{flexDirection: 'row'}}>
+                <TextInput
+                  onEndEditing={(e) => this.saveChanges(e.nativeEvent.text)}
+                  keyboardType="number-pad"
+                  style={styles.inlineInput}
+                  onChangeText={(value) => this.changeValue('mainSet', value)}
+                  value={this.state.restTimes.mainSet.toString()}
+                  />
+                  <Text> seconds</Text>
+              </Right>
+            </ListItem>
+            <ListItem icon onPress={() => this.edit(this.fslRef)}>
+              <Body>
+                <Text>First Set Last Sets</Text>
+              </Body>
+              <Right style={{flexDirection: 'row'}}>
+                <TextInput
+                  onEndEditing={(e) => this.saveChanges(e.nativeEvent.text)}
+                  keyboardType="number-pad"
+                  style={styles.inlineInput}
+                  onChangeText={(value) => this.changeValue('fsl', value)}
+                  value={this.state.restTimes.fsl.toString()}
+                  />
+                <Text> seconds</Text>
+              </Right>
+            </ListItem>
+            <ListItem icon onPress={() => this.edit(this.secondaryRef)}>
+              <Body>
+                <Text>Assistance Sets</Text>
+              </Body>
+              <Right style={{flexDirection: 'row'}}>
+                <TextInput
+                  onEndEditing={(e) => this.saveChanges(e.nativeEvent.text)}
+                  keyboardType="number-pad"
+                  style={styles.inlineInput}
+                  onChangeText={(value) => this.changeValue('secondary', value)}
+                  value={this.state.restTimes.secondary.toString()}
+                  />
+                <Text> seconds</Text>
+              </Right>
+            </ListItem>
+          </List>
+        </View>
+      );
+    }
+    return '';
   }
       
   render() {
