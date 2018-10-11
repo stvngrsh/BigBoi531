@@ -7,14 +7,8 @@
     "primaryColor": "#fff",
     "version": "0.0.2",
     "packagerOpts": {
-      "assetExts": [
-        "ttf",
-        "mp4"
-      ],
-      "sourceExts": [
-        "ts",
-        "tsx"
-      ],
+      "assetExts": ["ttf", "mp4"],
+      "sourceExts": ["ts", "tsx"],
       "transformer": "node_modules/react-native-typescript-transformer/index.js"
     },
     "ios": {

@@ -1,19 +1,18 @@
-import * as React from 'react';
-import { View } from 'react-native';
-import { Footer, FooterTab, Button, Icon, Text } from 'native-base';
-import { StyleSheet } from 'react-native';
-import { format, addSeconds } from 'date-fns';
+import * as React from "react";
+import { View } from "react-native";
+import { Footer, FooterTab, Button, Icon, Text } from "native-base";
+import { StyleSheet } from "react-native";
+import { format, addSeconds } from "date-fns";
 interface RestTimerProps {
-  timeRemaining: number
+  timeRemaining: number;
 }
 
 function getTime(seconds: number) {
   var helperDate = addSeconds(new Date(0), seconds);
-  return format(helperDate, 'mm:ss');
-
+  return format(helperDate, "mm:ss");
 }
 
-const RestTimer: React.SFC<RestTimerProps> = (props) => {
+const RestTimer: React.SFC<RestTimerProps> = props => {
   return (
     <Footer>
       <FooterTab>
@@ -26,19 +25,18 @@ const RestTimer: React.SFC<RestTimerProps> = (props) => {
         </Button>
       </FooterTab>
     </Footer>
-  )
+  );
 };
-
 
 const styles = StyleSheet.create({
   footer: {
     margin: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between'
+    flexDirection: "row",
+    justifyContent: "space-between"
   },
   footerLeft: {
-    alignItems: 'center',
-    flexDirection: 'row'
+    alignItems: "center",
+    flexDirection: "row"
   },
   timerText: {
     fontSize: 18,

@@ -1,194 +1,190 @@
 export enum Lift {
-    BENCH = "Bench",
-    SQUAT = "Squat",
-    PRESS = "Press",
-    DEADS = "Deadlift"    
+  BENCH = "Bench",
+  SQUAT = "Squat",
+  PRESS = "Press",
+  DEADS = "Deadlift"
 }
 
 export enum PushLifts {
-    DIPS = "Tricep Dips",
-    PUSHUPS = "Standard Push-Ups",
-    INCLINE = "Incline Dumbell Bench Press",
-    OVERHEAD = "Overhead Dumbell Press"
+  DIPS = "Tricep Dips",
+  PUSHUPS = "Standard Push-Ups",
+  INCLINE = "Incline Dumbell Bench Press",
+  OVERHEAD = "Overhead Dumbell Press"
 }
 
 export enum PullLifts {
-    PULLUPS = "Chinups / Pullups",
-    ROWS = "Inverted Dumbell Rows",
-    CURLS = "Dumbell Bicep Curls",
-    LATS = "Lat Pulldowns"
+  PULLUPS = "Chinups / Pullups",
+  ROWS = "Inverted Dumbell Rows",
+  CURLS = "Dumbell Bicep Curls",
+  LATS = "Lat Pulldowns"
 }
 
 export enum CoreLifts {
-    BACK = "Back Raises",
-    SPLITSQUAT = "Bulgarian Split Squat",
-    LUNGES = "Lunges"
+  BACK = "Back Raises",
+  SPLITSQUAT = "Bulgarian Split Squat",
+  LUNGES = "Lunges"
 }
 
 export enum GripLifts {
-    CURL = "Forearm Curl",
-    REVCURL = "Forearm Reverse Curl",
+  CURL = "Forearm Curl",
+  REVCURL = "Forearm Reverse Curl"
 }
 
 export enum CalfLifts {
-    SEATED_DUMBELL = "Dumbell Seated Calf Raise",
-    SEATED_BARBELL = "Barbell Seated Calf Raise",
-    REVERSE_RAISE = "Smith Machine Reverse Calf Raise",
-    STANDING_DUMBELL = "Standing Dumbell Calf Raise",
-    STANDING_BARBELL = "Standing Barbell Calf Raise"
+  SEATED_DUMBELL = "Dumbell Seated Calf Raise",
+  SEATED_BARBELL = "Barbell Seated Calf Raise",
+  REVERSE_RAISE = "Smith Machine Reverse Calf Raise",
+  STANDING_DUMBELL = "Standing Dumbell Calf Raise",
+  STANDING_BARBELL = "Standing Barbell Calf Raise"
 }
 
 export enum ClimbTypes {
-    BOULDER = "Bouldering Problem",
-    TOPROPE = "Top Rope Climb",
-    LEAD = "Sport/Lead Climb"
+  BOULDER = "Bouldering Problem",
+  TOPROPE = "Top Rope Climb",
+  LEAD = "Sport/Lead Climb"
 }
 
 export enum OffDayTypes {
-    CARDIO = "Cardio Workout 30+ min",
-    CORE = "Ab Workout 15+ min",
-    GRIP = "Grip Workout 15+ min"
+  CARDIO = "Cardio Workout 30+ min",
+  CORE = "Ab Workout 15+ min",
+  GRIP = "Grip Workout 15+ min"
 }
 
 export class CycleData {
-    template: string;
-    week: number;
-    day: number;
-    finishedWarmups: boolean[][];
-    finishedSets: boolean[][];
-    finishedFSL: boolean[][];
-    finishedAssistance: boolean[][][];
+  template: string;
+  week: number;
+  day: number;
+  finishedWarmups: boolean[][];
+  finishedSets: boolean[][];
+  finishedFSL: boolean[][];
+  finishedAssistance: boolean[][][];
 
-    constructor(week: number, day: number) {
-        this.template = "standard";
-        this.week = week;
-        this.day = day;
-        this.finishedWarmups = [];
-        this.finishedSets = [];
-        this.finishedFSL = [];
-        this.finishedAssistance = [];
-    }
+  constructor(week: number, day: number) {
+    this.template = "standard";
+    this.week = week;
+    this.day = day;
+    this.finishedWarmups = [];
+    this.finishedSets = [];
+    this.finishedFSL = [];
+    this.finishedAssistance = [];
+  }
 }
 
-interface INameToValueMap
-{
-    [key: string]: any;
+interface INameToValueMap {
+  [key: string]: any;
 }
 
 export class RestTimes implements INameToValueMap {
-    warmup: number;
-    mainSet: number;
-    fsl: number;
-    secondary: number;
+  warmup: number;
+  mainSet: number;
+  fsl: number;
+  secondary: number;
 
-    constructor() {
-        this.warmup = 30;
-        this.mainSet = 90;
-        this.fsl = 45;
-        this.secondary = 60;
-    }
+  constructor() {
+    this.warmup = 30;
+    this.mainSet = 90;
+    this.fsl = 45;
+    this.secondary = 60;
+  }
 }
 
 export class OneRepMax implements INameToValueMap {
-    bench: number;
-    squat: number;
-    press: number;
-    deads: number;
+  bench: number;
+  squat: number;
+  press: number;
+  deads: number;
 
-    constructor() {
-        this.bench = 100;
-        this.squat = 100;
-        this.press = 100;
-        this.deads = 100;
-    }
+  constructor() {
+    this.bench = 100;
+    this.squat = 100;
+    this.press = 100;
+    this.deads = 100;
+  }
 }
 
 export class Cycle {
-    weeks: Week[];
-    progression: Map<Lift, number>;
-    warmup: Set[];
-    deload: Deload;
+  weeks: Week[];
+  progression: Map<Lift, number>;
+  warmup: Set[];
+  deload: Deload;
 
-    constructor(weeks: Week[], progression: Map<Lift, number>, warmup: Set[], deload: Deload) {
-        this.weeks = weeks;
-        this.progression = progression;
-        this.warmup = warmup;
-        this.deload = deload;
-    }
+  constructor(weeks: Week[], progression: Map<Lift, number>, warmup: Set[], deload: Deload) {
+    this.weeks = weeks;
+    this.progression = progression;
+    this.warmup = warmup;
+    this.deload = deload;
+  }
 }
 
 export class Week {
-    sets: Set[];
-    fsl: number;
-    days: Day[];
+  sets: Set[];
+  fsl: number;
+  days: Day[];
 
-    constructor(sets: Set[], fsl: number, days: Day[]) {
-        this.sets = sets;
-        this.fsl = fsl;
-        this.days = days;
-    }
+  constructor(sets: Set[], fsl: number, days: Day[]) {
+    this.sets = sets;
+    this.fsl = fsl;
+    this.days = days;
+  }
 }
 
 export class AssistanceLift<T> {
-    lift: T;
-    reps: number;
-    sets: number;
-    recurring?: boolean;
+  lift: T;
+  reps: number;
+  sets: number;
+  recurring?: boolean;
 
-    constructor(lift: T, reps: number, sets: number, recurring?: boolean) {
-      this.lift = lift,
-      this.reps = reps,
-      this.sets = sets,
-      this.recurring = recurring
-    }
+  constructor(lift: T, reps: number, sets: number, recurring?: boolean) {
+    (this.lift = lift), (this.reps = reps), (this.sets = sets), (this.recurring = recurring);
+  }
 }
 
 export class AssistanceLifts {
-    push: AssistanceLift<PushLifts>[];
-    pull: AssistanceLift<PullLifts>[];
-    core: AssistanceLift<CoreLifts>[];
-    grip?: AssistanceLift<GripLifts>[];
-    calf?: AssistanceLift<CalfLifts>[];
+  push: AssistanceLift<PushLifts>[];
+  pull: AssistanceLift<PullLifts>[];
+  core: AssistanceLift<CoreLifts>[];
+  grip?: AssistanceLift<GripLifts>[];
+  calf?: AssistanceLift<CalfLifts>[];
 
-    constructor(init: AssistanceLifts) {
-        this.push = init.push,
-        this.pull = init.pull,
-        this.core = init.core,
-        this.grip = init.grip,
-        this.calf = init.calf
-    }
+  constructor(init: AssistanceLifts) {
+    (this.push = init.push),
+      (this.pull = init.pull),
+      (this.core = init.core),
+      (this.grip = init.grip),
+      (this.calf = init.calf);
+  }
 }
 
 export class Day {
-    lifts: Lift[];
-    assistanceLifts: AssistanceLifts;
+  lifts: Lift[];
+  assistanceLifts: AssistanceLifts;
 
-    constructor(lifts: Lift[], assistanceLifts: AssistanceLifts) {
-      this.lifts = lifts;
-      this.assistanceLifts = assistanceLifts;
-    }
+  constructor(lifts: Lift[], assistanceLifts: AssistanceLifts) {
+    this.lifts = lifts;
+    this.assistanceLifts = assistanceLifts;
+  }
 }
 
 export class Set {
-    percent: number;
-    reps: number;
-    amrap?: boolean;
+  percent: number;
+  reps: number;
+  amrap?: boolean;
 
-    constructor(percent: number, reps: number, amrap?: boolean) {
-        this.percent = percent;
-        this.reps = reps;
-        this.amrap = amrap;
-    }
+  constructor(percent: number, reps: number, amrap?: boolean) {
+    this.percent = percent;
+    this.reps = reps;
+    this.amrap = amrap;
+  }
 }
 
 export class Deload {
-    afterCycles: number;
-    sets: Set[];
-    days: Day[];
+  afterCycles: number;
+  sets: Set[];
+  days: Day[];
 
-    constructor(afterCycles: number, sets: Set[], days: Day[]) {
-      this.afterCycles = afterCycles;
-      this.sets = sets;
-      this.days = days;      
-    }
+  constructor(afterCycles: number, sets: Set[], days: Day[]) {
+    this.afterCycles = afterCycles;
+    this.sets = sets;
+    this.days = days;
+  }
 }
