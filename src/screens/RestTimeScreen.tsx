@@ -1,18 +1,33 @@
-import React from 'react';
-import { StyleSheet, TextInput } from 'react-native';
-import { NavigationScreenProp, NavigationScreenProps } from 'react-navigation';
-import Template from '../Template';
-import { View, Button, Text, Icon, Spinner, Container, Content, Header, Title, Body, List, ListItem, Left, Right} from 'native-base';
-import { Subscribe } from 'unstated';
-import { RestTimes } from '../Types';
-import Storage from '../containers/Storage';
+import React from "react";
+import { StyleSheet, TextInput } from "react-native";
+import { NavigationScreenProp, NavigationScreenProps } from "react-navigation";
+import Template from "../Template";
+import {
+  View,
+  Button,
+  Text,
+  Icon,
+  Spinner,
+  Container,
+  Content,
+  Header,
+  Title,
+  Body,
+  List,
+  ListItem,
+  Left,
+  Right
+} from "native-base";
+import { Subscribe } from "unstated";
+import { RestTimes } from "../Types";
+import Storage from "../containers/Storage";
+import { ScreenProps } from "../App";
 
 export interface RestTimeScreenState {
-  restTimes: RestTimes
+  restTimes: RestTimes;
 }
 
-export default class RestTimeScreen extends React.Component<NavigationScreenProps, RestTimeScreenState> {
-  
+export default class RestTimeScreen extends React.Component<ScreenProps, RestTimeScreenState> {
   storage: Storage;
   warmupRef: any;
   mainSetRef: any;
@@ -21,11 +36,9 @@ export default class RestTimeScreen extends React.Component<NavigationScreenProp
 
   state: RestTimeScreenState = {
     restTimes: new RestTimes()
-  }
+  };
 
-  constructor(
-    props: NavigationScreenProps
-  ) {
+  constructor(props: ScreenProps) {
     super(props);
     this.storage = new Storage();
     this.warmupRef = React.createRef();
@@ -33,54 +46,54 @@ export default class RestTimeScreen extends React.Component<NavigationScreenProp
     this.fslRef = React.createRef();
     this.secondaryRef = React.createRef();
   }
-  
+
   componentDidMount() {
-    this.storage.getRestTimes().then(restTimes => this.setState({restTimes}));
+    this.storage.getRestTimes().then(restTimes => this.setState({ restTimes }));
   }
-  
+
   edit = (ref: any) => {
     ref.current.focus();
-  }
+  };
 
   changeValue = (key: keyof RestTimes, value: string) => {
     try {
       let val = parseInt(value);
-      if(!isNaN(val)) {
+      if (!isNaN(val)) {
         let newRestTimes = { ...this.state.restTimes };
         newRestTimes[key] = val;
-        this.setState({restTimes: newRestTimes});
+        this.setState({ restTimes: newRestTimes });
       }
-    } catch(e) {
+    } catch (e) {
       console.error("Input must be an int");
     }
-  }
-  
+  };
+
   saveChanges = (value: string) => {
-    if(value && value !== "") {
+    if (value && value !== "") {
       this.storage.setRestTimes(this.state.restTimes);
     } else {
-      this.storage.getRestTimes().then(restTimes => this.setState({restTimes}));
+      this.storage.getRestTimes().then(restTimes => this.setState({ restTimes }));
     }
-  }
+  };
 
   renderContent() {
     let restTimes = this.state.restTimes;
-    if(restTimes) {
+    if (restTimes) {
       return (
-        <View style={{width: '100%'}}>
+        <View style={{ width: "100%" }}>
           <List>
-          <ListItem icon onPress={() => this.edit(this.warmupRef)}>
+            <ListItem icon onPress={() => this.edit(this.warmupRef)}>
               <Body>
                 <Text>Warmup Sets</Text>
               </Body>
-              <Right style={{flexDirection: 'row'}}>
+              <Right style={{ flexDirection: "row" }}>
                 <TextInput
-                  onEndEditing={(e) => this.saveChanges(e.nativeEvent.text)}
+                  onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
                   style={styles.inlineInput}
-                  onChangeText={(value) => this.changeValue('warmup', value)}
+                  onChangeText={value => this.changeValue("warmup", value)}
                   value={this.state.restTimes.warmup.toString()}
-                  />
+                />
                 <Text> seconds</Text>
               </Right>
             </ListItem>
@@ -88,29 +101,29 @@ export default class RestTimeScreen extends React.Component<NavigationScreenProp
               <Body>
                 <Text>Main Sets</Text>
               </Body>
-              <Right style={{flexDirection: 'row'}}>
+              <Right style={{ flexDirection: "row" }}>
                 <TextInput
-                  onEndEditing={(e) => this.saveChanges(e.nativeEvent.text)}
+                  onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
                   style={styles.inlineInput}
-                  onChangeText={(value) => this.changeValue('mainSet', value)}
+                  onChangeText={value => this.changeValue("mainSet", value)}
                   value={this.state.restTimes.mainSet.toString()}
-                  />
-                  <Text> seconds</Text>
+                />
+                <Text> seconds</Text>
               </Right>
             </ListItem>
             <ListItem icon onPress={() => this.edit(this.fslRef)}>
               <Body>
                 <Text>First Set Last Sets</Text>
               </Body>
-              <Right style={{flexDirection: 'row'}}>
+              <Right style={{ flexDirection: "row" }}>
                 <TextInput
-                  onEndEditing={(e) => this.saveChanges(e.nativeEvent.text)}
+                  onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
                   style={styles.inlineInput}
-                  onChangeText={(value) => this.changeValue('fsl', value)}
+                  onChangeText={value => this.changeValue("fsl", value)}
                   value={this.state.restTimes.fsl.toString()}
-                  />
+                />
                 <Text> seconds</Text>
               </Right>
             </ListItem>
@@ -118,14 +131,14 @@ export default class RestTimeScreen extends React.Component<NavigationScreenProp
               <Body>
                 <Text>Assistance Sets</Text>
               </Body>
-              <Right style={{flexDirection: 'row'}}>
+              <Right style={{ flexDirection: "row" }}>
                 <TextInput
-                  onEndEditing={(e) => this.saveChanges(e.nativeEvent.text)}
+                  onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
                   style={styles.inlineInput}
-                  onChangeText={(value) => this.changeValue('secondary', value)}
+                  onChangeText={value => this.changeValue("secondary", value)}
                   value={this.state.restTimes.secondary.toString()}
-                  />
+                />
                 <Text> seconds</Text>
               </Right>
             </ListItem>
@@ -133,48 +146,45 @@ export default class RestTimeScreen extends React.Component<NavigationScreenProp
         </View>
       );
     }
-    return '';
+    return "";
   }
-      
+
   render() {
     return (
       <Container>
-        <Header >
+        <Header>
           <Left>
             <Button transparent onPress={() => this.props.navigation.pop()}>
               <Icon name="arrow-back" />
-            </Button>  
+            </Button>
           </Left>
           <Body>
             <Title>Settings</Title>
           </Body>
-          <Right>
-          </Right>
-        </Header>        
-        <Content contentContainerStyle={styles.container}>
-          {this.renderContent()}
-        </Content>
+          <Right />
+        </Header>
+        <Content contentContainerStyle={styles.container}>{this.renderContent()}</Content>
       </Container>
     );
   }
 }
-      
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 5
-  }, 
-  spanButton: { 
-    flexDirection: 'column',
+  },
+  spanButton: {
+    flexDirection: "column",
     width: "100%",
     height: 70,
-    justifyContent: 'space-around'
+    justifyContent: "space-around"
   },
   inlineInput: {
-    flexDirection: 'row',
-    color: '#808080',
+    flexDirection: "row",
+    color: "#808080",
     fontSize: 18
   }
 });
