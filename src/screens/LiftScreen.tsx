@@ -25,9 +25,8 @@ import SetCard from '../components/SetCard';
 import { differenceInSeconds } from 'date-fns';
 import AssistanceCard from '../components/AssistanceCard';
 import MultiSetCard from '../components/MulitSetCard';
-import { NavigationScreenProp, NavigationScreenProps } from 'react-navigation';
+import { NavigationScreenProps } from 'react-navigation';
 import { Screens } from '../App';
-import { Subscribe } from 'unstated';
 import Storage from '../containers/Storage';
 
 const BENCH_MAX = 150;
