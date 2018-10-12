@@ -2,7 +2,7 @@ import * as React from "react";
 import { AssistanceLift } from "../Types";
 import { Card, CardItem, Text, Body } from "native-base";
 import { StyleSheet } from "react-native";
-import MultiSetCard from "./MulitSetCard";
+import MultiSetCardItem from "./MulitSetCardItem";
 
 export interface AssistanceCardProps {
   title: string;
@@ -44,7 +44,7 @@ export default class AssistanceCard extends React.Component<AssistanceCardProps,
         {this.state.expanded &&
           this.props.lift.map((lift, index) => {
             return (
-              <MultiSetCard
+              <MultiSetCardItem
                 finishSet={(setIndex: number) => this.props.finishSet(setIndex, index)}
                 finishedSets={this.props.finishedSets[index]}
                 key={index}

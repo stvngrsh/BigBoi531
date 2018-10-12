@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Card, CardItem, Text, Body, CheckBox } from "native-base";
+import { View, Card, CardItem, Text, Body, CheckBox } from "native-base";
 import { Set, Lift } from "../Types";
-import { View, StyleSheet, findNodeHandle } from "react-native";
+import { StyleSheet, findNodeHandle } from "react-native";
 import { Weight } from "./Weight";
 
-export interface MultiSetCardProps {
+export interface MultiSetCardItemProps {
   reps: number;
   weight: number;
   sets: number;
@@ -14,12 +14,12 @@ export interface MultiSetCardProps {
   finishSet: Function;
 }
 
-export interface MultiSetCardState {
+export interface MultiSetCardItemState {
   expanded: boolean;
 }
 
-export default class MultiSetCard extends React.Component<MultiSetCardProps, MultiSetCardState> {
-  state: MultiSetCardState = {
+export default class MultiSetCardItem extends React.Component<MultiSetCardItemProps, MultiSetCardItemState> {
+  state: MultiSetCardItemState = {
     expanded: true
   };
 

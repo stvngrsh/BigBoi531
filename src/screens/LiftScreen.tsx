@@ -24,15 +24,11 @@ import RestTimer from "../components/RestTimer";
 import SetCard from "../components/SetCard";
 import { differenceInSeconds } from "date-fns";
 import AssistanceCard from "../components/AssistanceCard";
-import MultiSetCard from "../components/MulitSetCard";
+import MultiSetCardItem from "../components/MulitSetCardItem";
 import { NavigationScreenProps } from "react-navigation";
 import { Screens, ScreenProps } from "../App";
 import Storage from "../containers/Storage";
 
-const BENCH_MAX = 150;
-const SQUAT_MAX = 230;
-const PRESS_MAX = 90;
-const DEADS_MAX = 200;
 const POUNDS_TO_KILOS = 0.453592;
 const POUNDS = true;
 const LOWEST_WEIGHT = 2.5 * 2;
@@ -65,7 +61,6 @@ export interface LiftScreenState {
   timeRemaining: number;
   restTimes: RestTimes;
   oneRepMax: OneRepMax;
-  currentCycle?: CycleData;
 }
 
 export default class LiftScreen extends React.Component<ScreenProps, LiftScreenState> {
@@ -90,13 +85,13 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
   };
 
   async componentDidMount() {
-    let currentCycle = await this.storage.getCurrentCycle();
-    this.setState({ currentCycle });
+    let currentCycle = this.props.dataContainer.state.currentCycle;
     this.storage.getRestTimes().then(restTimes => this.setState({ restTimes }));
     this.storage.getOneRepMax().then(oneRepMax => this.setState({ oneRepMax }));
 
     if (!currentCycle) {
-      return;
+      currentCycle = await this.storage.getCurrentCycle();
+      this.props.dataContainer.setState({ currentCycle: currentCycle });
     }
 
     let week = currentCycle.week;
@@ -288,7 +283,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
   };
 
   public render() {
-    let currentCycle = this.state.currentCycle;
+    let currentCycle = this.props.dataContainer.state.currentCycle;
     if (!currentCycle) {
       return "";
     }
@@ -329,12 +324,12 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                   <Card>
                     <CardItem>
                       <Title>
-                        Training Max:&nbps;
+                        Training Max:&nbsp;
                         {lift === Lift.BENCH && oneRepMax.bench}
                         {lift === Lift.SQUAT && oneRepMax.squat}
                         {lift === Lift.PRESS && oneRepMax.press}
                         {lift === Lift.DEADS && oneRepMax.deads}
-                        &nbps;lbs
+                        &nbsp;lbs
                       </Title>
                     </CardItem>
                   </Card>
@@ -354,14 +349,16 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                     lift={lift}
                     getWeight={(percentage: number, lift: Lift) => this.getWeight(percentage, lift, oneRepMax)}
                   />
-                  <MultiSetCard
-                    finishSet={(setIndex: number) => this.finishFSL(setIndex, index)}
-                    finishedSets={this.state.finishedFSL[index] || []}
-                    reps={mainSets[0].reps}
-                    weight={this.getWeight(mainSets[0].percent, lift, oneRepMax)}
-                    sets={fsl}
-                    title="FSL Sets"
-                  />
+                  <Card>
+                    <MultiSetCardItem
+                      finishSet={(setIndex: number) => this.finishFSL(setIndex, index)}
+                      finishedSets={this.state.finishedFSL[index] || []}
+                      reps={mainSets[0].reps}
+                      weight={this.getWeight(mainSets[0].percent, lift, oneRepMax)}
+                      sets={fsl}
+                      title="FSL Sets"
+                    />
+                  </Card>
                   <Body style={{ width: "100%", flexDirection: "row", justifyContent: "center" }}>
                     <Button
                       style={{ margin: 15, alignSelf: "center" }}

@@ -88,6 +88,12 @@ export class RestTimes implements INameToValueMap {
   }
 }
 
+//DEFAULTS
+const BENCH_MAX = 150;
+const SQUAT_MAX = 230;
+const PRESS_MAX = 90;
+const DEADS_MAX = 200;
+
 export class OneRepMax implements INameToValueMap {
   bench: number;
   squat: number;
@@ -95,10 +101,10 @@ export class OneRepMax implements INameToValueMap {
   deads: number;
 
   constructor() {
-    this.bench = 100;
-    this.squat = 100;
-    this.press = 100;
-    this.deads = 100;
+    this.bench = BENCH_MAX;
+    this.squat = SQUAT_MAX;
+    this.press = PRESS_MAX;
+    this.deads = DEADS_MAX;
   }
 }
 
