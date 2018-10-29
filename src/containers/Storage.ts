@@ -1,10 +1,26 @@
-import { CycleData, OneRepMax, RestTimes, Cycle } from "../Types";
+import {
+  CycleData,
+  OneRepMax,
+  RestTimes,
+  Cycle,
+  TrackedLift,
+  JokerSetConfig,
+  FSLSetConfig,
+  PyramidSetConfig,
+  WarmupSetConfig,
+  Lift
+} from "../Types";
 import { AsyncStorage } from "react-native";
 
 const CURRENT_CYCLE = "CURRENT_CYCLE";
-const PAST_CYCLES = "PAST_CYCLES";
+const HISTORY = "HISTORY";
 const ONE_REP_MAX = "ONE_REP_MAX";
 const REST_TIMES = "REST_TIMES";
+const JOKER_SET_CONFIG = "JOKER_SET_CONFIG";
+const FSL_SET_CONFIG = "FSL_SET_CONFIG";
+const PYRAMID_SET_CONFIG = "PYRAMID_SET_CONFIG";
+const WARMUP_SET_CONFIG = "WARMUP_SET_CONFIG";
+const BBB_SET_CONFIG = "BBB_SET_CONFIG";
 
 export type DataContainerState = {
   header: string;
@@ -15,86 +31,121 @@ export type DataContainerState = {
 };
 
 export default class Storage {
-  getOneRepMax = async (): Promise<OneRepMax> => {
+  async getWarmupSetConfig(): Promise<WarmupSetConfig> {
+    let json = await AsyncStorage.getItem(WARMUP_SET_CONFIG);
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      let config = new WarmupSetConfig(true, [40, 50, 60]);
+      this.setWarmupSetConfig(config);
+      return config;
+    }
+  }
+
+  setWarmupSetConfig = async (config: WarmupSetConfig) => {
+    AsyncStorage.setItem(WARMUP_SET_CONFIG, JSON.stringify(config));
+  };
+
+  async getPyramidSetConfig(): Promise<PyramidSetConfig> {
+    let json = await AsyncStorage.getItem(PYRAMID_SET_CONFIG);
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      let config = new PyramidSetConfig(false);
+      this.setPyramidSetConfig(config);
+      return config;
+    }
+  }
+
+  setPyramidSetConfig = async (config: PyramidSetConfig) => {
+    AsyncStorage.setItem(PYRAMID_SET_CONFIG, JSON.stringify(config));
+  };
+
+  async getFSLSetConfig(): Promise<FSLSetConfig> {
+    let json = await AsyncStorage.getItem(FSL_SET_CONFIG);
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      let config = new FSLSetConfig(false, false, 5, 5);
+      this.setFSLSetConfig(config);
+      return config;
+    }
+  }
+
+  setFSLSetConfig = async (config: FSLSetConfig) => {
+    AsyncStorage.setItem(FSL_SET_CONFIG, JSON.stringify(config));
+  };
+
+  async getJokerSetConfig(): Promise<JokerSetConfig> {
+    let json = await AsyncStorage.getItem(JOKER_SET_CONFIG);
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      let config = new JokerSetConfig(false, 5);
+      this.setJokerSetConfig(config);
+      return config;
+    }
+  }
+
+  setJokerSetConfig = async (config: JokerSetConfig) => {
+    AsyncStorage.setItem(JOKER_SET_CONFIG, JSON.stringify(config));
+  };
+
+  async getOneRepMax(): Promise<OneRepMax> {
     let json = await AsyncStorage.getItem(ONE_REP_MAX);
     if (json !== null) {
       return JSON.parse(json);
     } else {
       let orm = new OneRepMax();
-      AsyncStorage.setItem(ONE_REP_MAX, JSON.stringify(orm));
+      this.setOneRepMax(orm);
       return orm;
     }
+  }
+
+  setOneRepMax = async (config: OneRepMax) => {
+    AsyncStorage.setItem(ONE_REP_MAX, JSON.stringify(config));
   };
 
-  setOneRepMax = async (oneRepMax: OneRepMax) => {
-    AsyncStorage.setItem(ONE_REP_MAX, JSON.stringify(oneRepMax));
-  };
-
-  getRestTimes = async (): Promise<RestTimes> => {
+  async getRestTimes(): Promise<RestTimes> {
     let json = await AsyncStorage.getItem(REST_TIMES);
     if (json !== null) {
       return JSON.parse(json);
     } else {
       let restTimes = new RestTimes();
-      AsyncStorage.setItem(REST_TIMES, JSON.stringify(restTimes));
+      this.setRestTimes(restTimes);
       return restTimes;
     }
-  };
+  }
 
-  setRestTimes = async (restTimes: RestTimes) => {
-    AsyncStorage.setItem(REST_TIMES, JSON.stringify(restTimes));
-  };
-
-  addNewCycle = () => {
-    let newCycle = new CycleData(0, 0);
-    AsyncStorage.setItem(CURRENT_CYCLE, JSON.stringify(newCycle));
-    return newCycle;
+  setRestTimes = async (config: RestTimes) => {
+    AsyncStorage.setItem(REST_TIMES, JSON.stringify(config));
   };
 
   clearAll = () => {
     return AsyncStorage.clear();
   };
 
-  getPastCycles = async (): Promise<CycleData[]> => {
-    let json = await AsyncStorage.getItem(PAST_CYCLES);
+  async startNewCycle(lifts: Lift[][]): Promise<CycleData> {
+    let newCycle = new CycleData(lifts);
+    await AsyncStorage.setItem(CURRENT_CYCLE, JSON.stringify(newCycle));
+    return newCycle;
+  }
+
+  async getCurrentCycle(): Promise<CycleData | undefined> {
+    let json = await AsyncStorage.getItem(CURRENT_CYCLE);
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      return undefined;
+    }
+  }
+
+  getHistory = async (): Promise<TrackedLift[]> => {
+    let json = await AsyncStorage.getItem(HISTORY);
     if (json !== null) {
       return JSON.parse(json);
     } else {
       return [];
     }
-  };
-
-  getCurrentCycle = async (): Promise<CycleData> => {
-    console.log("true :", true);
-    let json = await AsyncStorage.getItem(CURRENT_CYCLE);
-    console.log("json :", json);
-    return json ? JSON.parse(json) : undefined;
-  };
-
-  saveWorkOut = async (
-    finishedWarmups: boolean[][],
-    finishedSets: boolean[][],
-    finishedFSL: boolean[][],
-    finishedAssistance: boolean[][][]
-  ) => {
-    let pastCycles: CycleData[] = await this.getPastCycles();
-    let currentCycle: CycleData = await this.getCurrentCycle();
-
-    currentCycle.finishedWarmups = finishedWarmups;
-    currentCycle.finishedSets = finishedSets;
-    currentCycle.finishedFSL = finishedFSL;
-    currentCycle.finishedAssistance = finishedAssistance;
-    pastCycles.push(currentCycle);
-
-    let newDay = currentCycle.day + 1;
-    let newWeek = currentCycle.week;
-    if (newDay > 2) {
-      newDay = 0;
-      newWeek++;
-    }
-    let newCycle = new CycleData(newWeek, newDay);
-    let p1 = AsyncStorage.setItem(PAST_CYCLES, JSON.stringify(pastCycles));
-    let p2 = AsyncStorage.setItem(CURRENT_CYCLE, JSON.stringify(currentCycle));
-    return Promise.all([p1, p2]);
   };
 }

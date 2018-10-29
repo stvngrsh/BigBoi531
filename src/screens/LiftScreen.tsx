@@ -1,7 +1,15 @@
 import * as React from "react";
 import { StyleSheet, Alert, ScrollView } from "react-native";
-import Template from "../Template";
-import { Lift, AssistanceLift, AssistanceLifts, OneRepMax, CycleData, RestTimes } from "../Types";
+import {
+  Lift,
+  OneRepMax,
+  CycleData,
+  RestTimes,
+  WarmupSetConfig,
+  FSLSetConfig,
+  JokerSetConfig,
+  PyramidSetConfig
+} from "../Types";
 import {
   Container,
   Card,
@@ -17,17 +25,17 @@ import {
   Icon,
   Content,
   Spinner,
-  CardItem
+  CardItem,
+  View
 } from "native-base";
 import { Notifications, Permissions, Constants } from "expo";
 import RestTimer from "../components/RestTimer";
-import SetCard from "../components/SetCard";
 import { differenceInSeconds } from "date-fns";
-import AssistanceCard from "../components/AssistanceCard";
 import MultiSetCardItem from "../components/MulitSetCardItem";
-import { NavigationScreenProps } from "react-navigation";
 import { Screens, ScreenProps } from "../App";
 import Storage from "../containers/Storage";
+import { Subscribe } from "unstated";
+import DataContainer from "../containers/DataContainer";
 
 const POUNDS_TO_KILOS = 0.453592;
 const POUNDS = true;
@@ -52,15 +60,15 @@ const localNotification = {
 
 export interface LiftScreenState {
   tabNum: number;
-  finishedWarmups: boolean[][];
-  finishedSets: boolean[][];
-  finishedFSL: boolean[][];
-  finishedAssistance: boolean[][][];
   timer: any;
   stopTime: Date;
   timeRemaining: number;
-  restTimes: RestTimes;
-  oneRepMax: OneRepMax;
+  restTimes?: RestTimes;
+  oneRepMax?: OneRepMax;
+  warmupSetConfig?: WarmupSetConfig;
+  fslSetConfig?: FSLSetConfig;
+  jokerSetConfig?: JokerSetConfig;
+  pyramidSetConfig?: PyramidSetConfig;
 }
 
 export default class LiftScreen extends React.Component<ScreenProps, LiftScreenState> {
@@ -73,85 +81,47 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
 
   state: LiftScreenState = {
     tabNum: 0,
-    finishedWarmups: [],
-    finishedSets: [],
-    finishedFSL: [],
-    finishedAssistance: [],
     timer: null,
     stopTime: new Date(),
-    timeRemaining: 0,
-    restTimes: new RestTimes(),
-    oneRepMax: new OneRepMax()
+    timeRemaining: 0
   };
 
-  async componentDidMount() {
-    let currentCycle = this.props.dataContainer.state.currentCycle;
-    this.storage.getRestTimes().then(restTimes => this.setState({ restTimes }));
-    this.storage.getOneRepMax().then(oneRepMax => this.setState({ oneRepMax }));
-
-    if (!currentCycle) {
-      currentCycle = await this.storage.getCurrentCycle();
-      this.props.dataContainer.setState({ currentCycle: currentCycle });
-    }
-
-    let week = currentCycle.week;
-    let day = currentCycle.day;
-
-    let lifts = Template.weeks[week].days[day].lifts;
-
-    let warmupSets = Template.warmup;
-    let mainSets = Template.weeks[week].sets;
-    let fsl = Template.weeks[week].fsl;
-
-    let assistanceLifts: AssistanceLifts = Template.weeks[week].days[day].assistanceLifts;
-
-    let finishedWarmups = [];
-    for (let i = 0; i < lifts.length; i++) {
-      let temp = [];
-      for (let j = 0; j < warmupSets.length; j++) {
-        temp.push(false);
-      }
-      finishedWarmups.push(temp);
-    }
-
-    let finishedSets = [];
-    for (let i = 0; i < lifts.length; i++) {
-      let temp = [];
-      for (let j = 0; j < mainSets.length; j++) {
-        temp.push(false);
-      }
-      finishedSets.push(temp);
-    }
-
-    let finishedFSL = [];
-    for (let i = 0; i < lifts.length; i++) {
-      let temp = [];
-      for (let j = 0; j < fsl; j++) {
-        temp.push(false);
-      }
-      finishedFSL.push(temp);
-    }
-
-    let finishedAssistance: boolean[][][] = [];
-    Object.keys(assistanceLifts).forEach((key, i) => {
-      let liftList: AssistanceLift<any>[] = (assistanceLifts as any)[key];
-      let temp: boolean[][] = [];
-      liftList.forEach((lift, j) => {
-        let temp2 = [];
-        for (let k = 0; k < lift.sets; k++) {
-          temp2.push(false);
-        }
-        temp.push(temp2);
+  getSettings() {
+    Promise.all([
+      this.storage.getRestTimes(),
+      this.storage.getOneRepMax(),
+      this.storage.getWarmupSetConfig(),
+      this.storage.getFSLSetConfig(),
+      this.storage.getJokerSetConfig(),
+      this.storage.getPyramidSetConfig()
+    ]).then(([restTimes, oneRepMax, warmupSetConfig, fslSetConfig, jokerSetConfig, pyramidSetConfig]) => {
+      this.setState({
+        restTimes,
+        oneRepMax,
+        warmupSetConfig,
+        fslSetConfig,
+        jokerSetConfig,
+        pyramidSetConfig
       });
-      finishedAssistance.push(temp);
     });
+  }
 
-    this.setState({
-      finishedWarmups: finishedWarmups,
-      finishedSets: finishedSets,
-      finishedFSL: finishedFSL,
-      finishedAssistance: finishedAssistance
-    });
+  async componentDidMount() {
+    this.getSettings();
+    let currentCycle = await this.props.dataContainer.getCurrentCycle();
+    let currentLift = await this.props.dataContainer.getCurrentLift();
+
+    // let lifts = [];
+    // let mainSets = [];
+
+    // let finishedSets = [];
+    // for (let i = 0; i < lifts.length; i++) {
+    //   let temp = [];
+    //   for (let j = 0; j < mainSets.length; j++) {
+    //     temp.push(false);
+    //   }
+    //   finishedSets.push(temp);
+    // }
 
     let result = await Permissions.askAsync(Permissions.NOTIFICATIONS);
     if (Constants.isDevice && result.status === "granted") {
@@ -159,56 +129,17 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     }
   }
 
-  finishWarmup = (setIndex: number, liftIndex: number) => {
-    let finishedWarmups = [...this.state.finishedWarmups];
-    let finishedWarmupsInner = [...finishedWarmups[liftIndex]];
-    finishedWarmupsInner[setIndex] = !finishedWarmupsInner[setIndex];
-    finishedWarmups[liftIndex] = finishedWarmupsInner;
-    this.setState({ finishedWarmups: finishedWarmups });
+  // finishSet = (setIndex: number, liftIndex: number) => {
+  //   let finishedSets = [...this.state.finishedSets];
+  //   let finishedSetsInner = [...finishedSets[liftIndex]];
+  //   finishedSetsInner[setIndex] = !finishedSetsInner[setIndex];
+  //   finishedSets[liftIndex] = finishedSetsInner;
+  //   this.setState({ finishedSets: finishedSets });
 
-    if (finishedWarmupsInner[setIndex] === true) {
-      this.startTimer(this.state.restTimes.warmup);
-    }
-  };
-
-  finishSet = (setIndex: number, liftIndex: number) => {
-    let finishedSets = [...this.state.finishedSets];
-    let finishedSetsInner = [...finishedSets[liftIndex]];
-    finishedSetsInner[setIndex] = !finishedSetsInner[setIndex];
-    finishedSets[liftIndex] = finishedSetsInner;
-    this.setState({ finishedSets: finishedSets });
-
-    if (finishedSetsInner[setIndex] === true) {
-      this.startTimer(this.state.restTimes.mainSet);
-    }
-  };
-
-  finishFSL = (setIndex: number, liftIndex: number) => {
-    let finishedFSL = [...this.state.finishedFSL];
-    let finishedFSLInner = [...finishedFSL[liftIndex]];
-    finishedFSLInner[setIndex] = !finishedFSLInner[setIndex];
-    finishedFSL[liftIndex] = finishedFSLInner;
-    this.setState({ finishedFSL: finishedFSL });
-
-    if (finishedFSLInner[setIndex] === true) {
-      this.startTimer(this.state.restTimes.fsl);
-    }
-  };
-
-  finishAssistance = (setIndex: number, liftIndex: number, liftTypeIndex: number) => {
-    let finishedAssistance = [...this.state.finishedAssistance];
-    let finishedAssistanceInner = [...finishedAssistance[liftTypeIndex]];
-    let finishedAssistanceInnerInner = [...finishedAssistanceInner[liftIndex]];
-
-    finishedAssistanceInnerInner[setIndex] = !finishedAssistanceInnerInner[setIndex];
-    finishedAssistanceInner[liftIndex] = finishedAssistanceInnerInner;
-    finishedAssistance[liftTypeIndex] = finishedAssistanceInner;
-    this.setState({ finishedAssistance: finishedAssistance });
-
-    if (finishedAssistanceInnerInner[setIndex] === true) {
-      this.startTimer(this.state.restTimes.secondary);
-    }
-  };
+  //   if (finishedSetsInner[setIndex] === true) {
+  //     this.startTimer(this.state.restTimes.mainSet);
+  //   }
+  // };
 
   tick = () => {
     let timeRemaining = differenceInSeconds(this.state.stopTime, new Date());
@@ -261,16 +192,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     return Math.floor(amount / LOWEST_WEIGHT) * LOWEST_WEIGHT;
   };
 
-  saveWorkout = () => {
-    this.storage
-      .saveWorkOut(
-        this.state.finishedWarmups,
-        this.state.finishedSets,
-        this.state.finishedFSL,
-        this.state.finishedAssistance
-      )
-      .then(() => this.props.navigation.popToTop());
-  };
+  saveWorkout = () => {};
 
   completeWorkout = () => {
     let message = "This will end your current session.";
@@ -283,143 +205,141 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
   };
 
   public render() {
-    let currentCycle = this.props.dataContainer.state.currentCycle;
-    if (!currentCycle) {
-      return "";
-    }
-    let week = currentCycle.week;
-    let day = currentCycle.day;
-    let lifts = Template.weeks[week].days[day].lifts;
-
-    let warmupSets = Template.warmup;
-    let mainSets = Template.weeks[week].sets;
-    let fsl = Template.weeks[week].fsl;
-
-    let assistance = Template.weeks[week].days[day].assistanceLifts;
-    let scrollRef;
-
-    let { oneRepMax } = this.state;
     return (
-      <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>Workout Day {day + 1}</Title>
-          </Body>
-          <Right>
-            <Button onPress={this.goToSettings} transparent>
-              <Icon name="options" />
-            </Button>
-          </Right>
-        </Header>
-        <Tabs locked page={this.state.tabNum} onChangeTab={(tab: any) => this.setState({ tabNum: tab.i })}>
-          {lifts.map((lift, index) => {
-            return (
-              <Tab key={index} heading={lift}>
-                <Content>
-                  <Card>
-                    <CardItem>
-                      <Title>
-                        Training Max:&nbsp;
-                        {lift === Lift.BENCH && oneRepMax.bench}
-                        {lift === Lift.SQUAT && oneRepMax.squat}
-                        {lift === Lift.PRESS && oneRepMax.press}
-                        {lift === Lift.DEADS && oneRepMax.deads}
-                        &nbsp;lbs
-                      </Title>
-                    </CardItem>
-                  </Card>
-                  <SetCard
-                    finishSet={(setIndex: number) => this.finishWarmup(setIndex, index)}
-                    finishedSets={this.state.finishedWarmups[index] || []}
-                    title="Warmup Sets!!"
-                    sets={warmupSets}
-                    lift={lift}
-                    getWeight={(percentage: number, lift: Lift) => this.getWeight(percentage, lift, oneRepMax)}
-                  />
-                  <SetCard
-                    finishSet={(setIndex: number) => this.finishSet(setIndex, index)}
-                    finishedSets={this.state.finishedSets[index] || []}
-                    title="Main Sets"
-                    sets={mainSets}
-                    lift={lift}
-                    getWeight={(percentage: number, lift: Lift) => this.getWeight(percentage, lift, oneRepMax)}
-                  />
-                  <Card>
-                    <MultiSetCardItem
-                      finishSet={(setIndex: number) => this.finishFSL(setIndex, index)}
-                      finishedSets={this.state.finishedFSL[index] || []}
-                      reps={mainSets[0].reps}
-                      weight={this.getWeight(mainSets[0].percent, lift, oneRepMax)}
-                      sets={fsl}
-                      title="FSL Sets"
-                    />
-                  </Card>
-                  <Body style={{ width: "100%", flexDirection: "row", justifyContent: "center" }}>
-                    <Button
-                      style={{ margin: 15, alignSelf: "center" }}
-                      onPress={() => this.setState({ tabNum: this.state.tabNum + 1 })}
-                    >
-                      <Text>{index === lifts.length - 1 ? "Assistance Lifts" : "Next Lift"}</Text>
-                    </Button>
-                  </Body>
-                </Content>
-              </Tab>
-            );
-          })}
-          <Tab heading="Secondarys">
-            <Content>
-              {Object.keys(assistance).map((assistanceKey, index) => {
-                let lift;
-                let title;
-                switch (assistanceKey) {
-                  case "push":
-                    lift = assistance.push;
-                    title = "Push Lifts";
-                    break;
-                  case "pull":
-                    lift = assistance.pull;
-                    title = "Pull Lifts";
-                    break;
-                  case "core":
-                    lift = assistance.core;
-                    title = "Core / Single Leg";
-                    break;
-                  case "grip":
-                    lift = assistance.grip;
-                    title = "Grip Workouts";
-                    break;
-                  case "calf":
-                    lift = assistance.calf;
-                    title = "Calc Workouts";
-                    break;
-                }
-                return (
-                  <AssistanceCard
-                    key={index}
-                    lift={lift as any}
-                    title={title as string}
-                    finishedSets={this.state.finishedAssistance[index] || []}
-                    finishSet={(setIndex: number, liftIndex: number) =>
-                      this.finishAssistance(setIndex, liftIndex, index)
-                    }
-                  />
-                );
-              })}
-              <Body style={{ width: "100%", flexDirection: "row", justifyContent: "center" }}>
-                <Button style={{ margin: 15, alignSelf: "center" }} onPress={this.completeWorkout}>
-                  <Text>Complete Workout</Text>
-                </Button>
-              </Body>
-            </Content>
-          </Tab>
-        </Tabs>
-        {this.state.timer && <RestTimer timeRemaining={this.state.timeRemaining} />}
-      </Container>
+      <Subscribe to={[DataContainer]}>
+        {(data: DataContainer) => {
+          let { oneRepMax, restTimes } = this.state;
+          let { currentCycle, currentLift } = data.state;
+          if (!oneRepMax || !restTimes || !currentCycle || !currentLift) {
+            return <View />;
+          }
+
+          let day = currentLift.day + 1;
+          let lifts = currentCycle.lifts[currentCycle.currentDay];
+          return (
+            <Container>
+              <Header>
+                <Left>
+                  <Button transparent onPress={() => this.props.navigation.pop()}>
+                    <Icon name="arrow-back" />
+                  </Button>
+                </Left>
+                <Body>
+                  <Title>Day {day}</Title>
+                </Body>
+                <Right>
+                  <Button onPress={this.goToSettings} transparent>
+                    <Icon name="options" />
+                  </Button>
+                </Right>
+              </Header>
+              <Tabs locked page={this.state.tabNum} onChangeTab={(tab: any) => this.setState({ tabNum: tab.i })}>
+                {lifts.map((lift, index) => {
+                  return (
+                    <Tab key={index} heading={lift}>
+                      <Content>
+                        <Card>
+                          <CardItem>
+                            <Title>
+                              Training Max:&nbsp;
+                              {lift === Lift.BENCH && oneRepMax.bench}
+                              {lift === Lift.SQUAT && oneRepMax.squat}
+                              {lift === Lift.PRESS && oneRepMax.press}
+                              {lift === Lift.DEADS && oneRepMax.deads}
+                              &nbsp;lbs
+                            </Title>
+                          </CardItem>
+                        </Card>
+                        {/* <SetCard
+                          finishSet={(setIndex: number) => this.finishWarmup(setIndex, index)}
+                          finishedSets={this.state.finishedWarmups[index] || []}
+                          title="Warmup Sets!!"
+                          sets={warmupSets}
+                          lift={lift}
+                          getWeight={(percentage: number, lift: Lift) => this.getWeight(percentage, lift, oneRepMax)}
+                        />
+                        <SetCard
+                          finishSet={(setIndex: number) => this.finishSet(setIndex, index)}
+                          finishedSets={this.state.finishedSets[index] || []}
+                          title="Main Sets"
+                          sets={mainSets}
+                          lift={lift}
+                          getWeight={(percentage: number, lift: Lift) => this.getWeight(percentage, lift, oneRepMax)}
+                        />
+                        <Card>
+                          <MultiSetCardItem
+                            finishSet={(setIndex: number) => this.finishFSL(setIndex, index)}
+                            finishedSets={this.state.finishedFSL[index] || []}
+                            reps={mainSets[0].reps}
+                            weight={this.getWeight(mainSets[0].percent, lift, oneRepMax)}
+                            sets={fsl}
+                            title="FSL Sets"
+                          />
+                        </Card> */}
+                        <Body style={{ width: "100%", flexDirection: "row", justifyContent: "center" }}>
+                          <Button
+                            style={{ margin: 15, alignSelf: "center" }}
+                            onPress={() => this.setState({ tabNum: this.state.tabNum + 1 })}
+                          >
+                            <Text>{index === lifts.length - 1 ? "Assistance Lifts" : "Next Lift"}</Text>
+                          </Button>
+                        </Body>
+                      </Content>
+                    </Tab>
+                  );
+                })}
+                <Tab heading="Secondarys">
+                  <Content>
+                    {/* {Object.keys(assistance).map((assistanceKey, index) => {
+                      let lift;
+                      let title;
+                      switch (assistanceKey) {
+                        case "push":
+                          lift = assistance.push;
+                          title = "Push Lifts";
+                          break;
+                        case "pull":
+                          lift = assistance.pull;
+                          title = "Pull Lifts";
+                          break;
+                        case "core":
+                          lift = assistance.core;
+                          title = "Core / Single Leg";
+                          break;
+                        case "grip":
+                          lift = assistance.grip;
+                          title = "Grip Workouts";
+                          break;
+                        case "calf":
+                          lift = assistance.calf;
+                          title = "Calc Workouts";
+                          break;
+                      }
+                      return (
+                        <AssistanceCard
+                          key={index}
+                          lift={lift as any}
+                          title={title as string}
+                          finishedSets={this.state.finishedAssistance[index] || []}
+                          finishSet={(setIndex: number, liftIndex: number) =>
+                            this.finishAssistance(setIndex, liftIndex, index)
+                          }
+                        />
+                      );
+                    })} */}
+                    <Body style={{ width: "100%", flexDirection: "row", justifyContent: "center" }}>
+                      <Button style={{ margin: 15, alignSelf: "center" }} onPress={this.completeWorkout}>
+                        <Text>Complete Workout</Text>
+                      </Button>
+                    </Body>
+                  </Content>
+                </Tab>
+              </Tabs>
+              {this.state.timer && <RestTimer timeRemaining={this.state.timeRemaining} />}
+            </Container>
+          );
+        }}
+      </Subscribe>
     );
   }
 }

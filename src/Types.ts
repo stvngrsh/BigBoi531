@@ -51,22 +51,38 @@ export enum OffDayTypes {
 }
 
 export class CycleData {
-  template: string;
+  lifts: Lift[][];
+  currentWeek: number;
+  currentDay: number;
+  trackedLifts: TrackedLift[];
+
+  constructor(lifts: Lift[][]) {
+    this.currentWeek = 0;
+    this.currentDay = 0;
+    this.trackedLifts = [];
+    this.lifts = lifts;
+  }
+}
+
+export class TrackedLift {
   week: number;
   day: number;
-  finishedWarmups: boolean[][];
-  finishedSets: boolean[][];
-  finishedFSL: boolean[][];
-  finishedAssistance: boolean[][][];
+
+  warmupSets?: boolean[][];
+
+  mainSets: boolean[][];
+
+  fslSets?: boolean[][];
+  jokerSets?: boolean[][];
+  pyramidSets?: boolean[][];
+  bbbSets?: boolean[][];
+
+  finishedAssistance?: boolean[][];
 
   constructor(week: number, day: number) {
-    this.template = "standard";
     this.week = week;
     this.day = day;
-    this.finishedWarmups = [];
-    this.finishedSets = [];
-    this.finishedFSL = [];
-    this.finishedAssistance = [];
+    this.mainSets = [];
   }
 }
 
@@ -85,6 +101,50 @@ export class RestTimes implements INameToValueMap {
     this.mainSet = 90;
     this.fsl = 45;
     this.secondary = 60;
+  }
+}
+
+export class JokerSetConfig {
+  enabled: boolean;
+  increase: number;
+
+  constructor(enabled: boolean, increase: number) {
+    this.enabled = enabled;
+    this.increase = increase;
+  }
+}
+
+export class FSLSetConfig {
+  enabled: boolean;
+  amrep: boolean;
+  sets?: number;
+  reps?: number;
+
+  constructor(enabled: boolean, amrep: boolean, sets?: number, reps?: number) {
+    this.enabled = enabled;
+    this.amrep = amrep;
+    if (!amrep) {
+      this.sets = sets;
+      this.reps = reps;
+    }
+  }
+}
+
+export class PyramidSetConfig {
+  enabled: boolean;
+
+  constructor(enabled: boolean) {
+    this.enabled = enabled;
+  }
+}
+
+export class WarmupSetConfig {
+  enabled: boolean;
+  sets: number[];
+
+  constructor(enabled: boolean, sets: number[]) {
+    this.enabled = enabled;
+    this.sets = sets;
   }
 }
 
@@ -109,88 +169,11 @@ export class OneRepMax implements INameToValueMap {
 }
 
 export class Cycle {
-  weeks: Week[];
-  progression: Map<Lift, number>;
-  warmup: Set[];
-  deload: Deload;
+  weeks: number;
+  lifts: Lift[][];
 
-  constructor(weeks: Week[], progression: Map<Lift, number>, warmup: Set[], deload: Deload) {
+  constructor(weeks: number, ...lifts: Lift[][]) {
     this.weeks = weeks;
-    this.progression = progression;
-    this.warmup = warmup;
-    this.deload = deload;
-  }
-}
-
-export class Week {
-  sets: Set[];
-  fsl: number;
-  days: Day[];
-
-  constructor(sets: Set[], fsl: number, days: Day[]) {
-    this.sets = sets;
-    this.fsl = fsl;
-    this.days = days;
-  }
-}
-
-export class AssistanceLift<T> {
-  lift: T;
-  reps: number;
-  sets: number;
-  recurring?: boolean;
-
-  constructor(lift: T, reps: number, sets: number, recurring?: boolean) {
-    (this.lift = lift), (this.reps = reps), (this.sets = sets), (this.recurring = recurring);
-  }
-}
-
-export class AssistanceLifts {
-  push: AssistanceLift<PushLifts>[];
-  pull: AssistanceLift<PullLifts>[];
-  core: AssistanceLift<CoreLifts>[];
-  grip?: AssistanceLift<GripLifts>[];
-  calf?: AssistanceLift<CalfLifts>[];
-
-  constructor(init: AssistanceLifts) {
-    (this.push = init.push),
-      (this.pull = init.pull),
-      (this.core = init.core),
-      (this.grip = init.grip),
-      (this.calf = init.calf);
-  }
-}
-
-export class Day {
-  lifts: Lift[];
-  assistanceLifts: AssistanceLifts;
-
-  constructor(lifts: Lift[], assistanceLifts: AssistanceLifts) {
     this.lifts = lifts;
-    this.assistanceLifts = assistanceLifts;
-  }
-}
-
-export class Set {
-  percent: number;
-  reps: number;
-  amrap?: boolean;
-
-  constructor(percent: number, reps: number, amrap?: boolean) {
-    this.percent = percent;
-    this.reps = reps;
-    this.amrap = amrap;
-  }
-}
-
-export class Deload {
-  afterCycles: number;
-  sets: Set[];
-  days: Day[];
-
-  constructor(afterCycles: number, sets: Set[], days: Day[]) {
-    this.afterCycles = afterCycles;
-    this.sets = sets;
-    this.days = days;
   }
 }

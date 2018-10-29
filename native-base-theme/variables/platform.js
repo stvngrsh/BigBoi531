@@ -1,4 +1,6 @@
 import color from "color";
+import { Colors } from "../Colors";
+export { Colors };
 
 import { Platform, Dimensions, PixelRatio } from "react-native";
 
@@ -6,22 +8,7 @@ const deviceHeight = Dimensions.get("window").height;
 const deviceWidth = Dimensions.get("window").width;
 const platform = Platform.OS;
 const platformStyle = undefined;
-const isIphoneX =
-  platform === "ios" && (deviceHeight === 812 || deviceWidth === 812);
-
-export const Colors = {
-  primary: '#00ACED',
-  secondary: '#243447',
-  active: '#1DCAFF',
-  success: '#4CD964',
-  warning: '#FFCC00',
-  danger: '#FF3B30',
-  light: '#F5F8FA',
-  dark: '#141D26',
-  white: '#FFFFFF',
-  black: '#000000',
-  gray: '#808080'
-}
+const isIphoneX = platform === "ios" && (deviceHeight === 812 || deviceWidth === 812);
 
 export default {
   platformStyle,
@@ -199,7 +186,7 @@ export default {
   listItemSelected: platform === "ios" ? "#007aff" : "#3F51B5",
 
   // List
-  listBg: "transparent",
+  listBg: Colors.dark,
   listBorderColor: "#c9c9c9",
   listDividerBg: "#f4f4f4",
   listBtnUnderlayColor: "#DDD",
@@ -220,12 +207,12 @@ export default {
   },
 
   // Segment
-  segmentBackgroundColor: platform === "ios" ? "#F8F8F8" : "#3F51B5",
-  segmentActiveBackgroundColor: platform === "ios" ? "#007aff" : "#fff",
-  segmentTextColor: platform === "ios" ? "#007aff" : "#fff",
-  segmentActiveTextColor: platform === "ios" ? "#fff" : "#3F51B5",
-  segmentBorderColor: platform === "ios" ? "#007aff" : "#fff",
-  segmentBorderColorMain: platform === "ios" ? "#a7a6ab" : "#3F51B5",
+  // segmentBackgroundColor: Colors.dark,
+  segmentActiveBackgroundColor: Colors.primary,
+  segmentTextColor: Colors.primary,
+  segmentActiveTextColor: Colors.light,
+  segmentBorderColor: Colors.primary,
+  segmentBorderColorMain: "rgba(0,0,0,0)",
 
   // Spinner
   defaultSpinnerColor: "#45D56E",

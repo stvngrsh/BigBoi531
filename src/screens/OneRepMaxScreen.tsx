@@ -1,13 +1,10 @@
 import React from "react";
 import { StyleSheet, TextInput } from "react-native";
-import { NavigationScreenProps } from "react-navigation";
-import Template from "../Template";
 import {
   View,
   Button,
   Text,
   Icon,
-  Spinner,
   Container,
   Content,
   Header,
@@ -18,7 +15,6 @@ import {
   Left,
   Right
 } from "native-base";
-import { Subscribe } from "unstated";
 import { OneRepMax } from "../Types";
 import Storage from "../containers/Storage";
 import { ScreenProps } from "../App";
@@ -57,8 +53,10 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
 
   changeValue = (key: keyof OneRepMax, value: string) => {
     try {
+      let isNumber = /^[0-9]*$/.test(value);
       let val = parseInt(value);
-      if (!isNaN(val)) {
+      if (!isNaN(val) && isNumber) {
+        console.log("settting");
         let newOneRepMax = { ...this.state.oneRepMax };
         newOneRepMax[key] = val;
         this.setState({ oneRepMax: newOneRepMax });
@@ -69,9 +67,11 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
   };
 
   saveChanges = (value: string) => {
-    if (value && value !== "") {
+    let isNumber = /^[0-9]*$/.test(value);
+    if (value && value !== "" && isNumber) {
       this.storage.setOneRepMax(this.state.oneRepMax);
     } else {
+      console.log("fix");
       this.storage.getOneRepMax().then(oneRepMax => this.setState({ oneRepMax }));
     }
   };
@@ -89,6 +89,7 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
               <Right style={{ flexDirection: "row" }}>
                 <TextInput
                   ref={this.benchRef}
+                  maxLength={3}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
                   style={styles.inlineInput}

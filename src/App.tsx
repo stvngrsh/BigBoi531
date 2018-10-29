@@ -2,9 +2,8 @@ import React from "react";
 import { Provider, Subscribe } from "unstated";
 import { createStackNavigator, NavigationScreenProps } from "react-navigation";
 import HomeScreen from "./screens/HomeScreen";
-import LiftScreen from "./screens/LiftScreen";
-import { Root, Button, Text, StyleProvider } from "native-base";
-import { View } from "react-native";
+// import LiftScreen from "./screens/LiftScreen";
+import { Root, StyleProvider } from "native-base";
 import { YellowBox } from "react-native";
 import Expo from "expo";
 
@@ -16,6 +15,12 @@ import SettingsScreen from "./screens/SettingsScreen";
 import OneRepMaxScreen from "./screens/OneRepMaxScreen";
 import RestTimeScreen from "./screens/RestTimeScreen";
 import DataContainer from "./containers/DataContainer";
+import JokerSetsScreen from "./screens/JokerSetScreen";
+import FSLSetsScreen from "./screens/FSLSetScreen";
+import PyramidSetScreen from "./screens/PyramidSetScreen";
+import WarmupSetsScreen from "./screens/WarmupSetScreen";
+import CycleOverviewScreen from "./screens/CycleOverviewScreen";
+import LiftScreen from "./screens/LiftScreen";
 
 YellowBox.ignoreWarnings(["Remote debugger"]);
 
@@ -33,6 +38,7 @@ export default class App extends React.Component<{}, { loading: boolean }> {
     });
     this.setState({ loading: false });
   }
+
   render() {
     if (this.state.loading) {
       return <Expo.AppLoading />;
@@ -59,10 +65,16 @@ interface StackNavProps {
 
 export enum Screens {
   HOME = "Home",
+  CYCLE = "Cycle",
   LIFT = "Lift",
   SETTINGS = "Settings",
   ONE_REP_MAX = "OneRepMax",
-  REST_TIMES = "RestTimes"
+  REST_TIMES = "RestTimes",
+  JOKER_SETS = "JokerSets",
+  FSL_SETS = "FSLSets",
+  PYRAMID_SETS = "PyramidSets",
+  WARMUP_SETS = "WarmupSets",
+  BBB_SETS = "BBBSets"
 }
 
 export interface ScreenProps extends NavigationScreenProps {
@@ -75,6 +87,9 @@ class StackNav extends React.Component<StackNavProps, any> {
       [Screens.HOME]: {
         screen: (props: ScreenProps) => <HomeScreen dataContainer={this.props.dataContainer} {...props} />
       },
+      [Screens.CYCLE]: {
+        screen: (props: ScreenProps) => <CycleOverviewScreen dataContainer={this.props.dataContainer} {...props} />
+      },
       [Screens.LIFT]: {
         screen: (props: ScreenProps) => <LiftScreen dataContainer={this.props.dataContainer} {...props} />
       },
@@ -86,11 +101,26 @@ class StackNav extends React.Component<StackNavProps, any> {
       },
       [Screens.REST_TIMES]: {
         screen: (props: ScreenProps) => <RestTimeScreen dataContainer={this.props.dataContainer} {...props} />
+      },
+      [Screens.JOKER_SETS]: {
+        screen: (props: ScreenProps) => <JokerSetsScreen dataContainer={this.props.dataContainer} {...props} />
+      },
+      [Screens.FSL_SETS]: {
+        screen: (props: ScreenProps) => <FSLSetsScreen dataContainer={this.props.dataContainer} {...props} />
+      },
+      [Screens.PYRAMID_SETS]: {
+        screen: (props: ScreenProps) => <PyramidSetScreen dataContainer={this.props.dataContainer} {...props} />
+      },
+      [Screens.WARMUP_SETS]: {
+        screen: (props: ScreenProps) => <WarmupSetsScreen dataContainer={this.props.dataContainer} {...props} />
       }
+      // [Screens.BBB_SETS]: {
+      //   screen: (props: ScreenProps) => <BBBSetScreen dataContainer={this.props.dataContainer} {...props} />
+      // }
     },
     {
       navigationOptions: ({ navigation }) => ({}),
-      initialRouteName: "Home",
+      initialRouteName: Screens.LIFT,
       headerMode: "none"
     }
   );

@@ -1,7 +1,6 @@
 import * as React from "react";
-import { View, Card, CardItem, Text, Body, CheckBox } from "native-base";
-import { Set, Lift } from "../Types";
-import { StyleSheet, findNodeHandle } from "react-native";
+import { View, CardItem, Text, Body, CheckBox } from "native-base";
+import { StyleSheet } from "react-native";
 import { Weight } from "./Weight";
 
 export interface MultiSetCardItemProps {

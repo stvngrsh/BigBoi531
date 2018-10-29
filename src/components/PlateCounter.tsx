@@ -1,6 +1,6 @@
 import React from "react";
-import { Icon, Text, Thumbnail } from "native-base";
-import { StyleSheet, View, Image } from "react-native";
+import { Text } from "native-base";
+import { StyleSheet, View } from "react-native";
 
 const PLATES = [45, 35, 25, 10, 5, 2.5];
 const BAR = 45;

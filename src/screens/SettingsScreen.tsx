@@ -1,7 +1,5 @@
 import React from "react";
 import { StyleSheet } from "react-native";
-import { NavigationScreenProp, NavigationScreenProps } from "react-navigation";
-import Template from "../Template";
 import {
   View,
   Button,
@@ -18,35 +16,55 @@ import {
   Left,
   Right
 } from "native-base";
-import { Subscribe } from "unstated";
 import { Screens, ScreenProps } from "../App";
+import Storage from "../containers/Storage";
 
-export interface SettingsScreenState {}
+export interface SettingsScreenState {
+  warmup: boolean;
+  joker: boolean;
+  fsl: boolean;
+  pyramid: boolean;
+}
 
 export default class SettingsScreen extends React.Component<ScreenProps, SettingsScreenState> {
-  state: SettingsScreenState = {};
+  storage: Storage;
+
+  state: SettingsScreenState = {
+    warmup: false,
+    joker: false,
+    fsl: false,
+    pyramid: false
+  };
 
   constructor(props: ScreenProps) {
     super(props);
+    this.storage = new Storage();
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.getSummaryData();
+    this.props.navigation.addListener("willFocus", () => {
+      this.getSummaryData();
+    });
+  }
 
-  goToORMScreen = async () => {
-    const { navigate } = this.props.navigation;
-    navigate(Screens.ONE_REP_MAX);
-  };
+  async getSummaryData() {
+    this.storage.getWarmupSetConfig().then(({ enabled }) => this.setState({ warmup: enabled }));
+    this.storage.getFSLSetConfig().then(({ enabled }) => this.setState({ fsl: enabled }));
+    this.storage.getJokerSetConfig().then(({ enabled }) => this.setState({ joker: enabled }));
+    this.storage.getPyramidSetConfig().then(({ enabled }) => this.setState({ pyramid: enabled }));
+  }
 
-  goToRestTimeScreen = async () => {
+  navigate = async (screen: Screens) => {
     const { navigate } = this.props.navigation;
-    navigate(Screens.REST_TIMES);
+    navigate(screen);
   };
 
   renderContent() {
     return (
       <View style={{ width: "100%" }}>
         <List>
-          <ListItem icon onPress={this.goToORMScreen}>
+          <ListItem icon onPress={() => this.navigate(Screens.ONE_REP_MAX)}>
             <Body>
               <Text>1-Rep Max Values</Text>
             </Body>
@@ -54,11 +72,47 @@ export default class SettingsScreen extends React.Component<ScreenProps, Setting
               <Icon active name="arrow-forward" />
             </Right>
           </ListItem>
-          <ListItem icon onPress={this.goToRestTimeScreen}>
+          <ListItem icon onPress={() => this.navigate(Screens.REST_TIMES)}>
             <Body>
               <Text>Rest times</Text>
             </Body>
             <Right>
+              <Icon active name="arrow-forward" />
+            </Right>
+          </ListItem>
+          <ListItem icon onPress={() => this.navigate(Screens.WARMUP_SETS)}>
+            <Body>
+              <Text>Warmup Sets</Text>
+            </Body>
+            <Right>
+              <Text>{this.state.warmup ? "Enabled" : "Disabled"}</Text>
+              <Icon active name="arrow-forward" />
+            </Right>
+          </ListItem>
+          <ListItem icon onPress={() => this.navigate(Screens.JOKER_SETS)}>
+            <Body>
+              <Text>Joker Sets</Text>
+            </Body>
+            <Right>
+              <Text>{this.state.joker ? "Enabled" : "Disabled"}</Text>
+              <Icon active name="arrow-forward" />
+            </Right>
+          </ListItem>
+          <ListItem icon onPress={() => this.navigate(Screens.FSL_SETS)}>
+            <Body>
+              <Text>FSL Sets</Text>
+            </Body>
+            <Right>
+              <Text>{this.state.fsl ? "Enabled" : "Disabled"}</Text>
+              <Icon active name="arrow-forward" />
+            </Right>
+          </ListItem>
+          <ListItem icon onPress={() => this.navigate(Screens.PYRAMID_SETS)}>
+            <Body>
+              <Text>Pyramid Sets</Text>
+            </Body>
+            <Right>
+              <Text>{this.state.pyramid ? "Enabled" : "Disabled"}</Text>
               <Icon active name="arrow-forward" />
             </Right>
           </ListItem>

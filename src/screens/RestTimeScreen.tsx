@@ -1,13 +1,10 @@
 import React from "react";
 import { StyleSheet, TextInput } from "react-native";
-import { NavigationScreenProp, NavigationScreenProps } from "react-navigation";
-import Template from "../Template";
 import {
   View,
   Button,
   Text,
   Icon,
-  Spinner,
   Container,
   Content,
   Header,
@@ -18,7 +15,6 @@ import {
   Left,
   Right
 } from "native-base";
-import { Subscribe } from "unstated";
 import { RestTimes } from "../Types";
 import Storage from "../containers/Storage";
 import { ScreenProps } from "../App";
@@ -31,8 +27,8 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
   storage: Storage;
   warmupRef: any;
   mainSetRef: any;
-  fslRef: any;
   secondaryRef: any;
+  assistanceRef: any;
 
   state: RestTimeScreenState = {
     restTimes: new RestTimes()
@@ -43,8 +39,8 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
     this.storage = new Storage();
     this.warmupRef = React.createRef();
     this.mainSetRef = React.createRef();
-    this.fslRef = React.createRef();
     this.secondaryRef = React.createRef();
+    this.assistanceRef = React.createRef();
   }
 
   componentDidMount() {
@@ -76,6 +72,11 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
     }
   };
 
+  resetDefaults = () => {
+    let restTimes = new RestTimes();
+    this.storage.setRestTimes(restTimes).then(() => this.setState({ restTimes }));
+  };
+
   renderContent() {
     let restTimes = this.state.restTimes;
     if (restTimes) {
@@ -88,6 +89,7 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
               </Body>
               <Right style={{ flexDirection: "row" }}>
                 <TextInput
+                  ref={this.warmupRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
                   style={styles.inlineInput}
@@ -103,6 +105,7 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
               </Body>
               <Right style={{ flexDirection: "row" }}>
                 <TextInput
+                  ref={this.mainSetRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
                   style={styles.inlineInput}
@@ -112,12 +115,13 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
                 <Text> seconds</Text>
               </Right>
             </ListItem>
-            <ListItem icon onPress={() => this.edit(this.fslRef)}>
+            <ListItem icon onPress={() => this.edit(this.secondaryRef)}>
               <Body>
-                <Text>First Set Last Sets</Text>
+                <Text>Secondary Sets</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
                 <TextInput
+                  ref={this.secondaryRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
                   style={styles.inlineInput}
@@ -127,12 +131,13 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
                 <Text> seconds</Text>
               </Right>
             </ListItem>
-            <ListItem icon onPress={() => this.edit(this.secondaryRef)}>
+            <ListItem icon onPress={() => this.edit(this.assistanceRef)}>
               <Body>
                 <Text>Assistance Sets</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
                 <TextInput
+                  ref={this.assistanceRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
                   style={styles.inlineInput}
@@ -161,7 +166,11 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
           <Body>
             <Title>Settings</Title>
           </Body>
-          <Right />
+          <Right>
+            <Button transparent onPress={this.resetDefaults}>
+              <Text>Reset</Text>
+            </Button>
+          </Right>
         </Header>
         <Content contentContainerStyle={styles.container}>{this.renderContent()}</Content>
       </Container>
