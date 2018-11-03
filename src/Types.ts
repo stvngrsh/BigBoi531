@@ -79,10 +79,24 @@ export class TrackedLift {
 
   finishedAssistance?: boolean[][];
 
-  constructor(week: number, day: number) {
+  constructor(week: number, day: number, lifts: number) {
     this.week = week;
     this.day = day;
+
+    this.warmupSets = [];
     this.mainSets = [];
+    this.fslSets = [];
+    this.jokerSets = [];
+    this.pyramidSets = [];
+    this.bbbSets = [];
+    for (let i = 0; i < lifts; i++) {
+      this.warmupSets.push([]);
+      this.mainSets.push([]);
+      this.fslSets.push([]);
+      this.jokerSets.push([]);
+      this.pyramidSets.push([]);
+      this.bbbSets.push([]);
+    }
   }
 }
 

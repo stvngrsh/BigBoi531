@@ -8,7 +8,8 @@ import {
   WarmupSetConfig,
   FSLSetConfig,
   JokerSetConfig,
-  PyramidSetConfig
+  PyramidSetConfig,
+  TrackedLift
 } from "../Types";
 import {
   Container,
@@ -26,7 +27,8 @@ import {
   Content,
   Spinner,
   CardItem,
-  View
+  View,
+  CheckBox
 } from "native-base";
 import { Notifications, Permissions, Constants } from "expo";
 import RestTimer from "../components/RestTimer";
@@ -36,10 +38,16 @@ import { Screens, ScreenProps } from "../App";
 import Storage from "../containers/Storage";
 import { Subscribe } from "unstated";
 import DataContainer from "../containers/DataContainer";
+import { Weight } from "../components/Weight";
+import PlateCounter from "../components/PlateCounter";
 
 const POUNDS_TO_KILOS = 0.453592;
 const POUNDS = true;
 const LOWEST_WEIGHT = 2.5 * 2;
+
+const REP_SCHEME = [[5, 5, 5], [3, 3, 3], [5, 3, 1]];
+
+const WEIGHT_SCHEME = [[65, 75, 85], [70, 80, 90], [75, 85, 95]];
 
 const localNotification = {
   title: "Rest over!",
@@ -108,7 +116,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
 
   async componentDidMount() {
     this.getSettings();
-    let currentCycle = await this.props.dataContainer.getCurrentCycle();
+    // let currentCycle = await this.props.dataContainer.getCurrentCycle();
     let currentLift = await this.props.dataContainer.getCurrentLift();
 
     // let lifts = [];
@@ -129,17 +137,27 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     }
   }
 
-  // finishSet = (setIndex: number, liftIndex: number) => {
-  //   let finishedSets = [...this.state.finishedSets];
-  //   let finishedSetsInner = [...finishedSets[liftIndex]];
-  //   finishedSetsInner[setIndex] = !finishedSetsInner[setIndex];
-  //   finishedSets[liftIndex] = finishedSetsInner;
-  //   this.setState({ finishedSets: finishedSets });
+  finishSet = (key: keyof TrackedLift, liftIndex: number, setIndex: number) => {
+    let currentLift = { ...this.props.dataContainer.state.currentLift };
+    let finishedSets = [...(currentLift as any)[key]];
+    let finishedSetsInner = [...finishedSets[liftIndex]];
+    finishedSetsInner[setIndex] = !finishedSetsInner[setIndex];
+    finishedSets[liftIndex] = finishedSetsInner;
+    currentLift[key] = finishedSets;
+    this.props.dataContainer.setState({ currentLift }, () =>
+      console.log("this.props.dataContainer.state :", this.props.dataContainer.state)
+    );
 
-  //   if (finishedSetsInner[setIndex] === true) {
-  //     this.startTimer(this.state.restTimes.mainSet);
-  //   }
-  // };
+    if (finishedSetsInner[setIndex] === true) {
+      if (key === "mainSets") {
+        this.startTimer(this.state.restTimes.mainSet);
+      } else if (key === "warmupSets") {
+        this.startTimer(this.state.restTimes.warmup);
+      } else {
+        this.startTimer(this.state.restTimes.fsl);
+      }
+    }
+  };
 
   tick = () => {
     let timeRemaining = differenceInSeconds(this.state.stopTime, new Date());
@@ -172,7 +190,8 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     });
   };
 
-  getWeight = (percentage: number, lift: Lift, oneRepMax: OneRepMax) => {
+  getWeight = (percentage: number, lift: Lift) => {
+    let { oneRepMax } = this.state;
     let multiplier = percentage / 100;
     let amount = 0;
     switch (lift) {
@@ -214,8 +233,17 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
             return <View />;
           }
 
-          let day = currentLift.day + 1;
+          let day = currentLift.day;
+          let week = currentLift.week;
           let lifts = currentCycle.lifts[currentCycle.currentDay];
+
+          let { warmupSetConfig, fslSetConfig, jokerSetConfig, pyramidSetConfig } = this.state;
+          let fslNum: number[] = [];
+          for (let i = 0; i < fslSetConfig.sets ? fslSetConfig.sets : 0; i++) {
+            fslNum.push(1);
+          }
+          let jokerNum: number[] = [1, 1];
+
           return (
             <Container>
               <Header>
@@ -225,7 +253,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                   </Button>
                 </Left>
                 <Body>
-                  <Title>Day {day}</Title>
+                  <Title>Day {day + 1}</Title>
                 </Body>
                 <Right>
                   <Button onPress={this.goToSettings} transparent>
@@ -234,9 +262,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                 </Right>
               </Header>
               <Tabs locked page={this.state.tabNum} onChangeTab={(tab: any) => this.setState({ tabNum: tab.i })}>
-                {lifts.map((lift, index) => {
+                {lifts.map((lift, liftIndex) => {
                   return (
-                    <Tab key={index} heading={lift}>
+                    <Tab key={liftIndex} heading={lift}>
                       <Content>
                         <Card>
                           <CardItem>
@@ -250,38 +278,233 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                             </Title>
                           </CardItem>
                         </Card>
-                        {/* <SetCard
-                          finishSet={(setIndex: number) => this.finishWarmup(setIndex, index)}
-                          finishedSets={this.state.finishedWarmups[index] || []}
-                          title="Warmup Sets!!"
-                          sets={warmupSets}
-                          lift={lift}
-                          getWeight={(percentage: number, lift: Lift) => this.getWeight(percentage, lift, oneRepMax)}
-                        />
-                        <SetCard
-                          finishSet={(setIndex: number) => this.finishSet(setIndex, index)}
-                          finishedSets={this.state.finishedSets[index] || []}
-                          title="Main Sets"
-                          sets={mainSets}
-                          lift={lift}
-                          getWeight={(percentage: number, lift: Lift) => this.getWeight(percentage, lift, oneRepMax)}
-                        />
+
+                        {warmupSetConfig &&
+                          warmupSetConfig.enabled && (
+                            <Card>
+                              <CardItem header bordered button>
+                                <Text>Warmup Sets</Text>
+                              </CardItem>
+                              <CardItem bordered>
+                                <Body>
+                                  {warmupSetConfig.sets.map((percent, index) => {
+                                    let weight = this.getWeight(percent, lift);
+
+                                    return (
+                                      <Body key={index} style={{ flexDirection: "column", alignItems: "flex-start" }}>
+                                        <Text style={styles.subTitle}>{percent}% RM</Text>
+                                        <View style={styles.set}>
+                                          <Text style={styles.text}>
+                                            <Weight weight={weight} />x
+                                            {index === warmupSetConfig.sets.length - 1 ? 3 : 5}
+                                          </Text>
+                                          <View style={styles.plates}>
+                                            <PlateCounter weight={weight} />
+                                          </View>
+                                          <View style={styles.checkboxOuter}>
+                                            <CheckBox
+                                              onPress={() => this.finishSet("warmupSets", liftIndex, index)}
+                                              style={styles.checkbox}
+                                              checked={data.state.currentLift.warmupSets[liftIndex][index]}
+                                            />
+                                          </View>
+                                        </View>
+                                      </Body>
+                                    );
+                                  })}
+                                </Body>
+                              </CardItem>
+                            </Card>
+                          )}
+
                         <Card>
-                          <MultiSetCardItem
-                            finishSet={(setIndex: number) => this.finishFSL(setIndex, index)}
-                            finishedSets={this.state.finishedFSL[index] || []}
-                            reps={mainSets[0].reps}
-                            weight={this.getWeight(mainSets[0].percent, lift, oneRepMax)}
-                            sets={fsl}
-                            title="FSL Sets"
-                          />
-                        </Card> */}
+                          <CardItem header bordered button>
+                            <Text>Main Sets</Text>
+                          </CardItem>
+                          <CardItem bordered>
+                            <Body>
+                              {WEIGHT_SCHEME[week].map((percent, index) => {
+                                let weight = this.getWeight(percent, lift);
+                                return (
+                                  <Body key={index} style={{ flexDirection: "column", alignItems: "flex-start" }}>
+                                    <Text style={styles.subTitle}>{percent}% RM </Text>
+                                    <View style={styles.set}>
+                                      <Text style={styles.text}>
+                                        <Weight weight={weight} />x{REP_SCHEME[week][index]}
+                                        {index === 2 ? "+" : ""}
+                                      </Text>
+                                      <View style={styles.plates}>
+                                        <PlateCounter weight={weight} />
+                                      </View>
+                                      <View style={styles.checkboxOuter}>
+                                        <CheckBox
+                                          onPress={() => this.finishSet("mainSets", liftIndex, index)}
+                                          style={styles.checkbox}
+                                          checked={data.state.currentLift.mainSets[liftIndex][index]}
+                                        />
+                                      </View>
+                                    </View>
+                                  </Body>
+                                );
+                              })}
+                            </Body>
+                          </CardItem>
+                        </Card>
+
+                        {fslSetConfig &&
+                          fslSetConfig.enabled && (
+                            <Card>
+                              <CardItem header bordered button>
+                                <Text>FSL Sets</Text>
+                              </CardItem>
+                              <CardItem bordered>
+                                {fslSetConfig.amrep ? (
+                                  <Body>
+                                    <Body style={{ flexDirection: "column", alignItems: "flex-start" }}>
+                                      <Text style={styles.subTitle}>{WEIGHT_SCHEME[week][0]}% RM</Text>
+                                      <View style={styles.set}>
+                                        <Text style={styles.text}>
+                                          <Weight weight={this.getWeight(WEIGHT_SCHEME[week][0], lift)} />x 1+
+                                        </Text>
+                                        <View style={styles.plates}>
+                                          <PlateCounter weight={this.getWeight(WEIGHT_SCHEME[week][0], lift)} />
+                                        </View>
+                                        <View style={styles.checkboxOuter}>
+                                          <CheckBox
+                                            onPress={() => this.finishSet("fslSets", liftIndex, 0)}
+                                            style={styles.checkbox}
+                                            checked={data.state.currentLift.fslSets[liftIndex][0]}
+                                          />
+                                        </View>
+                                      </View>
+                                    </Body>
+                                  </Body>
+                                ) : (
+                                  <Body>
+                                    {fslNum.map((set, index) => {
+                                      return (
+                                        <Body key={index} style={{ flexDirection: "column", alignItems: "flex-start" }}>
+                                          <Text style={styles.subTitle}>{WEIGHT_SCHEME[week][0]}% RM</Text>
+                                          <View style={styles.set}>
+                                            <Text style={styles.text}>
+                                              <Weight weight={this.getWeight(WEIGHT_SCHEME[week][0], lift)} />x{" "}
+                                              {fslSetConfig.reps}
+                                            </Text>
+                                            <View style={styles.plates}>
+                                              <PlateCounter weight={this.getWeight(WEIGHT_SCHEME[week][0], lift)} />
+                                            </View>
+                                            <View style={styles.checkboxOuter}>
+                                              <CheckBox
+                                                onPress={() => this.finishSet("fslSets", liftIndex, index)}
+                                                style={styles.checkbox}
+                                                checked={data.state.currentLift.fslSets[liftIndex][index]}
+                                              />
+                                            </View>
+                                          </View>
+                                        </Body>
+                                      );
+                                    })}
+                                  </Body>
+                                )}
+                              </CardItem>
+                            </Card>
+                          )}
+
+                        {jokerSetConfig &&
+                          jokerSetConfig.enabled && (
+                            <Card>
+                              <CardItem header bordered button>
+                                <Text>Joker Sets</Text>
+                              </CardItem>
+                              <CardItem bordered>
+                                <Body>
+                                  {jokerNum.map((set, index) => {
+                                    return (
+                                      <Body key={index} style={{ flexDirection: "column", alignItems: "flex-start" }}>
+                                        <Text style={styles.subTitle}>
+                                          {WEIGHT_SCHEME[week][2] + jokerSetConfig.increase * (index + 1)}% RM
+                                        </Text>
+                                        <View style={styles.set}>
+                                          <Text style={styles.text}>
+                                            <Weight
+                                              weight={WEIGHT_SCHEME[week][2] + jokerSetConfig.increase * (index + 1)}
+                                            />
+                                            x{REP_SCHEME[week][2]}+
+                                          </Text>
+                                          <View style={styles.plates}>
+                                            <PlateCounter
+                                              weight={WEIGHT_SCHEME[week][2] + jokerSetConfig.increase * (index + 1)}
+                                            />
+                                          </View>
+                                          <View style={styles.checkboxOuter}>
+                                            <CheckBox
+                                              onPress={() => this.finishSet("jokerSets", liftIndex, index)}
+                                              style={styles.checkbox}
+                                              checked={data.state.currentLift.jokerSets[liftIndex][index]}
+                                            />
+                                          </View>
+                                        </View>
+                                      </Body>
+                                    );
+                                  })}
+                                </Body>
+                              </CardItem>
+                            </Card>
+                          )}
+
+                        {pyramidSetConfig &&
+                          pyramidSetConfig.enabled && (
+                            <Card>
+                              <CardItem header bordered button>
+                                <Text>Pyramid Sets</Text>
+                              </CardItem>
+                              <CardItem bordered>
+                                <Body>
+                                  {WEIGHT_SCHEME[week]
+                                    .map((percent, index) => {
+                                      let weight = this.getWeight(percent, lift);
+
+                                      if (index !== 2) {
+                                        return (
+                                          <Body
+                                            key={index}
+                                            style={{ flexDirection: "column", alignItems: "flex-start" }}
+                                          >
+                                            <Text style={styles.subTitle}>{percent}% RM </Text>
+                                            <View style={styles.set}>
+                                              <Text style={styles.text}>
+                                                <Weight weight={weight} />x{REP_SCHEME[week][index]}
+                                                {index === 2 ? "+" : ""}
+                                              </Text>
+                                              <View style={styles.plates}>
+                                                <PlateCounter weight={weight} />
+                                              </View>
+                                              <View style={styles.checkboxOuter}>
+                                                <CheckBox
+                                                  onPress={() => this.finishSet("pyramidSets", liftIndex, index)}
+                                                  style={styles.checkbox}
+                                                  checked={data.state.currentLift.pyramidSets[liftIndex][index]}
+                                                />
+                                              </View>
+                                            </View>
+                                          </Body>
+                                        );
+                                      } else {
+                                        return null;
+                                      }
+                                    })
+                                    .reverse()}
+                                </Body>
+                              </CardItem>
+                            </Card>
+                          )}
+
                         <Body style={{ width: "100%", flexDirection: "row", justifyContent: "center" }}>
                           <Button
                             style={{ margin: 15, alignSelf: "center" }}
                             onPress={() => this.setState({ tabNum: this.state.tabNum + 1 })}
                           >
-                            <Text>{index === lifts.length - 1 ? "Assistance Lifts" : "Next Lift"}</Text>
+                            <Text>{liftIndex === lifts.length - 1 ? "Assistance Lifts" : "Next Lift"}</Text>
                           </Button>
                         </Body>
                       </Content>
@@ -391,5 +614,8 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     margin: 5
+  },
+  subTitle: {
+    fontSize: 14
   }
 });

@@ -102,7 +102,11 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
                   <ScrollView horizontal={true} style={styles.days}>
                     {data.state.currentCycle.lifts.map((lifts, j) => {
                       return (
-                        <Button key={j} style={completed[j] ? styles.liftCircleComplete : styles.liftCircle}>
+                        <Button
+                          key={j}
+                          style={completed[j] ? styles.liftCircleComplete : styles.liftCircle}
+                          onPress={() => this.gotoLift(i, j)}
+                        >
                           <Text>Day {j + 1}</Text>
                           <View style={styles.icons}>
                             {lifts.map((lift, j) => {
@@ -124,6 +128,16 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
       </Subscribe>
     );
   }
+
+  gotoLift = (week: number, day: number) => {
+    const { navigate } = this.props.navigation;
+
+    let currentCycle = { ...this.props.dataContainer.state.currentCycle };
+    currentCycle.currentDay = day;
+    currentCycle.currentWeek = week;
+
+    this.props.dataContainer.setState({ currentCycle, currentLift: undefined }, () => navigate(Screens.LIFT));
+  };
 
   goToSettings = () => {
     const { navigate } = this.props.navigation;

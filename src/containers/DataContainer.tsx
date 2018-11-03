@@ -35,7 +35,11 @@ export default class DataContainer extends Container<DataContainerState> {
     if (this.state.currentLift) {
       return this.state.currentLift;
     } else {
-      let currentLift = new TrackedLift(this.state.currentCycle.currentWeek, this.state.currentCycle.currentDay);
+      let currentLift = new TrackedLift(
+        this.state.currentCycle.currentWeek,
+        this.state.currentCycle.currentDay,
+        this.state.currentCycle.lifts.length
+      );
       this.setState({ currentLift });
       return currentLift;
     }

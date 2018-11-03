@@ -120,7 +120,7 @@ class StackNav extends React.Component<StackNavProps, any> {
     },
     {
       navigationOptions: ({ navigation }) => ({}),
-      initialRouteName: Screens.LIFT,
+      initialRouteName: Screens.HOME,
       headerMode: "none"
     }
   );
