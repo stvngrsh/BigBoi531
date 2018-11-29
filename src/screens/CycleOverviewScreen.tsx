@@ -22,6 +22,7 @@ import { TrackedLift, Lift } from "../Types";
 import { Subscribe } from "unstated";
 import DataContainer from "../containers/DataContainer";
 import { Colors } from "../../native-base-theme/Colors";
+
 export interface CycleOverviewScreenState {}
 
 export default class CycleOverviewScreen extends React.Component<ScreenProps, CycleOverviewScreenState> {
@@ -34,9 +35,8 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
     this.storage = new Storage();
   }
 
-  componentDidMount() {
-    //TODO DEV ONLY
-    this.props.dataContainer.getCurrentCycle();
+  shouldComponentUpdate() {
+    return this.props.navigation.isFocused();
   }
 
   getLiftIcon(lift: Lift, index: number) {
@@ -71,6 +71,7 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
     return (
       <Subscribe to={[DataContainer]}>
         {(data: DataContainer) => {
+          console.log("cycle overview");
           if (data.state.currentCycle) {
             let weeks: JSX.Element[] = [];
             let weekCount = data.state.currentCycle.lifts.length;
@@ -78,10 +79,8 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
               let completed: boolean[] = [];
               let percent = 0;
               let length = data.state.currentCycle.lifts.length;
-              console.log("length :", length);
               for (let j = 0; j < length; j++) {
                 let day = j + (i + 1) * (i + 1) - i - 1;
-                console.log("day :", day);
                 if (data.state.currentCycle.trackedLifts[day]) {
                   completed.push(true);
                   percent += 1;
@@ -102,11 +101,7 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
                   <ScrollView horizontal={true} style={styles.days}>
                     {data.state.currentCycle.lifts.map((lifts, j) => {
                       return (
-                        <Button
-                          key={j}
-                          style={completed[j] ? styles.liftCircleComplete : styles.liftCircle}
-                          onPress={() => this.gotoLift(i, j)}
-                        >
+                        <Button key={j} style={this.getCircleStyle(i, j, data)} onPress={() => this.gotoLift(i, j)}>
                           <Text>Day {j + 1}</Text>
                           <View style={styles.icons}>
                             {lifts.map((lift, j) => {
@@ -129,14 +124,23 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
     );
   }
 
+  getCircleStyle = (week: number, day: number, data: DataContainer) => {
+    let current = data.state.currentLift;
+    if (current && current.week === week && current.day === day) {
+      return styles.liftCircleActive;
+    } else {
+      for (const completed of this.props.dataContainer.state.currentCycle.trackedLifts) {
+        if (completed.week === week && completed.day === day) {
+          return styles.liftCircleComplete;
+        }
+      }
+      return styles.liftCircle;
+    }
+  };
+
   gotoLift = (week: number, day: number) => {
     const { navigate } = this.props.navigation;
-
-    let currentCycle = { ...this.props.dataContainer.state.currentCycle };
-    currentCycle.currentDay = day;
-    currentCycle.currentWeek = week;
-
-    this.props.dataContainer.setState({ currentCycle, currentLift: undefined }, () => navigate(Screens.LIFT));
+    this.props.dataContainer.openLift(week, day, navigate);
   };
 
   goToSettings = () => {
@@ -193,6 +197,16 @@ const styles = StyleSheet.create({
     width: 120,
     margin: 10,
     backgroundColor: Colors.primary,
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  liftCircleActive: {
+    borderRadius: 120,
+    height: 120,
+    width: 120,
+    margin: 10,
+    backgroundColor: Colors.warning,
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center"

@@ -3628,6 +3628,10 @@ react-devtools-core@3.1.0:
     shell-quote "^1.6.1"
     ws "^2.0.3"
 
+react-highlight-updates@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/react-highlight-updates/-/react-highlight-updates-1.0.0.tgz#2fc060cb24ead85262f001d074a6339af44a6058"
+
 react-lifecycles-compat@^3, react-lifecycles-compat@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"

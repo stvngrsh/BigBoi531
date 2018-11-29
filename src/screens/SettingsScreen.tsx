@@ -27,8 +27,6 @@ export interface SettingsScreenState {
 }
 
 export default class SettingsScreen extends React.Component<ScreenProps, SettingsScreenState> {
-  storage: Storage;
-
   state: SettingsScreenState = {
     warmup: false,
     joker: false,
@@ -38,7 +36,6 @@ export default class SettingsScreen extends React.Component<ScreenProps, Setting
 
   constructor(props: ScreenProps) {
     super(props);
-    this.storage = new Storage();
   }
 
   componentDidMount() {
@@ -49,10 +46,13 @@ export default class SettingsScreen extends React.Component<ScreenProps, Setting
   }
 
   async getSummaryData() {
-    this.storage.getWarmupSetConfig().then(({ enabled }) => this.setState({ warmup: enabled }));
-    this.storage.getFSLSetConfig().then(({ enabled }) => this.setState({ fsl: enabled }));
-    this.storage.getJokerSetConfig().then(({ enabled }) => this.setState({ joker: enabled }));
-    this.storage.getPyramidSetConfig().then(({ enabled }) => this.setState({ pyramid: enabled }));
+    let { warmupSetConfig, fslSetConfig, jokerSetConfig, pyramidSetConfig } = this.props.dataContainer.state;
+    this.setState({
+      warmup: warmupSetConfig.enabled,
+      fsl: fslSetConfig.enabled,
+      joker: jokerSetConfig.enabled,
+      pyramid: pyramidSetConfig.enabled
+    });
   }
 
   navigate = async (screen: Screens) => {

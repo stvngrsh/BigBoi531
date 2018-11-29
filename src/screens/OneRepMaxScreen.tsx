@@ -16,7 +16,6 @@ import {
   Right
 } from "native-base";
 import { OneRepMax } from "../Types";
-import Storage from "../containers/Storage";
 import { ScreenProps } from "../App";
 
 export interface OneRepMaxScreenState {
@@ -24,7 +23,6 @@ export interface OneRepMaxScreenState {
 }
 
 export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRepMaxScreenState> {
-  storage: Storage;
   benchRef: any;
   squatRef: any;
   pressRef: any;
@@ -36,7 +34,6 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
 
   constructor(props: ScreenProps) {
     super(props);
-    this.storage = new Storage();
     this.benchRef = React.createRef();
     this.squatRef = React.createRef();
     this.pressRef = React.createRef();
@@ -44,7 +41,8 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
   }
 
   componentDidMount() {
-    this.storage.getOneRepMax().then(oneRepMax => this.setState({ oneRepMax }));
+    let oneRepMax = { ...this.props.dataContainer.state.oneRepMax };
+    this.setState({ oneRepMax });
   }
 
   edit = (ref: any) => {
@@ -69,10 +67,10 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
   saveChanges = (value: string) => {
     let isNumber = /^[0-9]*$/.test(value);
     if (value && value !== "" && isNumber) {
-      this.storage.setOneRepMax(this.state.oneRepMax);
+      this.props.dataContainer.setOneRepMax(this.state.oneRepMax);
     } else {
-      console.log("fix");
-      this.storage.getOneRepMax().then(oneRepMax => this.setState({ oneRepMax }));
+      let oneRepMax = { ...this.props.dataContainer.state.oneRepMax };
+      this.setState({ oneRepMax });
     }
   };
 

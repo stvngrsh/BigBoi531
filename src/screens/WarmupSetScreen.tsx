@@ -18,7 +18,6 @@ import {
   Separator,
   Segment
 } from "native-base";
-import Storage from "../containers/Storage";
 import { ScreenProps } from "../App";
 import { WarmupSetConfig } from "../Types";
 
@@ -27,21 +26,18 @@ export interface WarmupSetsScreenState {
 }
 
 export default class WarmupSetsScreen extends React.Component<ScreenProps, WarmupSetsScreenState> {
-  storage: Storage;
   setRefs: any[];
 
   state: WarmupSetsScreenState = {};
 
   constructor(props: ScreenProps) {
     super(props);
-    this.storage = new Storage();
   }
 
   componentDidMount() {
-    this.storage.getWarmupSetConfig().then(warmupSetConfig => {
-      this.setRefs = warmupSetConfig.sets.map(() => React.createRef());
-      this.setState({ warmupSetConfig });
-    });
+    let warmupSetConfig = { ...this.props.dataContainer.state.warmupSetConfig };
+    this.setRefs = warmupSetConfig.sets.map(() => React.createRef());
+    this.setState({ warmupSetConfig });
   }
 
   edit = (index: number) => {
@@ -63,16 +59,17 @@ export default class WarmupSetsScreen extends React.Component<ScreenProps, Warmu
 
   saveChanges = (value: string) => {
     if (value && value !== "") {
-      this.storage.setWarmupSetConfig(this.state.warmupSetConfig);
+      this.props.dataContainer.setWarmupSetConfig(this.state.warmupSetConfig);
     } else {
-      this.storage.getWarmupSetConfig().then(warmupSetConfig => this.setState({ warmupSetConfig }));
+      let warmupSetConfig = { ...this.props.dataContainer.state.warmupSetConfig };
+      this.setState({ warmupSetConfig });
     }
   };
 
   toggleEnabled = (value: boolean) => {
     let warmupSetConfig = { ...this.state.warmupSetConfig! };
     warmupSetConfig.enabled = value;
-    this.storage.setWarmupSetConfig(warmupSetConfig).then(() => this.setState({ warmupSetConfig }));
+    this.props.dataContainer.setWarmupSetConfig(warmupSetConfig).then(() => this.setState({ warmupSetConfig }));
   };
 
   addSet = () => {
@@ -84,7 +81,7 @@ export default class WarmupSetsScreen extends React.Component<ScreenProps, Warmu
       sets.push(40);
     }
     warmupSetConfig.sets = sets;
-    this.storage.setWarmupSetConfig(warmupSetConfig).then(() => this.setState({ warmupSetConfig }));
+    this.props.dataContainer.setWarmupSetConfig(warmupSetConfig).then(() => this.setState({ warmupSetConfig }));
   };
 
   removeSet = () => {
@@ -93,7 +90,7 @@ export default class WarmupSetsScreen extends React.Component<ScreenProps, Warmu
     if (sets.length > 0) {
       sets.splice(sets.length - 1, 1);
       warmupSetConfig.sets = sets;
-      this.storage.setWarmupSetConfig(warmupSetConfig).then(() => this.setState({ warmupSetConfig }));
+      this.props.dataContainer.setWarmupSetConfig(warmupSetConfig).then(() => this.setState({ warmupSetConfig }));
     }
   };
 

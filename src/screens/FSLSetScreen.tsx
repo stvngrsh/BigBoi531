@@ -18,7 +18,6 @@ import {
   Separator,
   Segment
 } from "native-base";
-import Storage from "../containers/Storage";
 import { ScreenProps } from "../App";
 import { FSLSetConfig } from "../Types";
 
@@ -27,7 +26,6 @@ export interface FSLSetsScreenState {
 }
 
 export default class FSLSetsScreen extends React.Component<ScreenProps, FSLSetsScreenState> {
-  storage: Storage;
   setsRef: any;
   repsRef: any;
 
@@ -35,13 +33,13 @@ export default class FSLSetsScreen extends React.Component<ScreenProps, FSLSetsS
 
   constructor(props: ScreenProps) {
     super(props);
-    this.storage = new Storage();
     this.setsRef = React.createRef();
     this.repsRef = React.createRef();
   }
 
   componentDidMount() {
-    this.storage.getFSLSetConfig().then(fslSetConfig => this.setState({ fslSetConfig }));
+    let fslSetConfig = { ...this.props.dataContainer.state.fslSetConfig };
+    this.setState({ fslSetConfig });
   }
 
   edit = (ref: any) => {
@@ -63,27 +61,28 @@ export default class FSLSetsScreen extends React.Component<ScreenProps, FSLSetsS
 
   saveChanges = (value: string) => {
     if (value && value !== "") {
-      this.storage.setFSLSetConfig(this.state.fslSetConfig);
+      this.props.dataContainer.setFSLSetConfig(this.state.fslSetConfig);
     } else {
-      this.storage.getFSLSetConfig().then(fslSetConfig => this.setState({ fslSetConfig }));
+      let fslSetConfig = { ...this.props.dataContainer.state.fslSetConfig };
+      this.setState({ fslSetConfig });
     }
   };
 
   toggleEnabled = (value: boolean) => {
     let fslSetConfig = { ...this.state.fslSetConfig! };
     fslSetConfig.enabled = value;
-    this.storage.setFSLSetConfig(fslSetConfig).then(() => this.setState({ fslSetConfig }));
+    this.props.dataContainer.setFSLSetConfig(fslSetConfig).then(() => this.setState({ fslSetConfig }));
   };
 
   toggleAMRAP = (value: boolean) => {
     let fslSetConfig = { ...this.state.fslSetConfig! };
     fslSetConfig.amrep = value;
-    this.storage.setFSLSetConfig(fslSetConfig).then(() => this.setState({ fslSetConfig }));
+    this.props.dataContainer.setFSLSetConfig(fslSetConfig).then(() => this.setState({ fslSetConfig }));
   };
 
   resetDefaults = () => {
     let fslSetConfig = new FSLSetConfig(true, false, 5, 5);
-    this.storage.setFSLSetConfig(fslSetConfig).then(() => this.setState({ fslSetConfig }));
+    this.props.dataContainer.setFSLSetConfig(fslSetConfig).then(() => this.setState({ fslSetConfig }));
   };
 
   renderContent() {
@@ -127,44 +126,42 @@ export default class FSLSetsScreen extends React.Component<ScreenProps, FSLSetsS
               </Right>
             </ListItem>
           )}
-          {fslSetConfig.enabled &&
-            !fslSetConfig.amrep && (
-              <ListItem icon onPress={() => this.edit(this.setsRef)}>
-                <Body>
-                  <Text>Set Count</Text>
-                </Body>
-                <Right style={{ flexDirection: "row" }}>
-                  <TextInput
-                    ref={this.setsRef}
-                    onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
-                    keyboardType="number-pad"
-                    style={styles.inlineInput}
-                    onChangeText={value => this.changeValue("sets", value)}
-                    value={fslSetConfig.sets ? fslSetConfig.sets.toString() : "5"}
-                  />
-                  <Text> Sets</Text>
-                </Right>
-              </ListItem>
-            )}
-          {fslSetConfig.enabled &&
-            !fslSetConfig.amrep && (
-              <ListItem icon onPress={() => this.edit(this.repsRef)}>
-                <Body>
-                  <Text>Reps per Set</Text>
-                </Body>
-                <Right style={{ flexDirection: "row" }}>
-                  <TextInput
-                    ref={this.repsRef}
-                    onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
-                    keyboardType="number-pad"
-                    style={styles.inlineInput}
-                    onChangeText={value => this.changeValue("reps", value)}
-                    value={fslSetConfig.reps ? fslSetConfig.reps.toString() : "5"}
-                  />
-                  <Text> Reps</Text>
-                </Right>
-              </ListItem>
-            )}
+          {fslSetConfig.enabled && !fslSetConfig.amrep && (
+            <ListItem icon onPress={() => this.edit(this.setsRef)}>
+              <Body>
+                <Text>Set Count</Text>
+              </Body>
+              <Right style={{ flexDirection: "row" }}>
+                <TextInput
+                  ref={this.setsRef}
+                  onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
+                  keyboardType="number-pad"
+                  style={styles.inlineInput}
+                  onChangeText={value => this.changeValue("sets", value)}
+                  value={fslSetConfig.sets ? fslSetConfig.sets.toString() : "5"}
+                />
+                <Text> Sets</Text>
+              </Right>
+            </ListItem>
+          )}
+          {fslSetConfig.enabled && !fslSetConfig.amrep && (
+            <ListItem icon onPress={() => this.edit(this.repsRef)}>
+              <Body>
+                <Text>Reps per Set</Text>
+              </Body>
+              <Right style={{ flexDirection: "row" }}>
+                <TextInput
+                  ref={this.repsRef}
+                  onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
+                  keyboardType="number-pad"
+                  style={styles.inlineInput}
+                  onChangeText={value => this.changeValue("reps", value)}
+                  value={fslSetConfig.reps ? fslSetConfig.reps.toString() : "5"}
+                />
+                <Text> Reps</Text>
+              </Right>
+            </ListItem>
+          )}
         </List>
       );
     }

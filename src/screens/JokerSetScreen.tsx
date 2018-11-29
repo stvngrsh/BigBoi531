@@ -17,7 +17,6 @@ import {
   Switch,
   Separator
 } from "native-base";
-import Storage from "../containers/Storage";
 import { ScreenProps } from "../App";
 import { JokerSetConfig } from "../Types";
 
@@ -26,19 +25,18 @@ export interface JokerSetsScreenState {
 }
 
 export default class JokerSetsScreen extends React.Component<ScreenProps, JokerSetsScreenState> {
-  storage: Storage;
   increaseRef: any;
 
   state: JokerSetsScreenState = {};
 
   constructor(props: ScreenProps) {
     super(props);
-    this.storage = new Storage();
     this.increaseRef = React.createRef();
   }
 
   componentDidMount() {
-    this.storage.getJokerSetConfig().then(jokerSetConfig => this.setState({ jokerSetConfig }));
+    let jokerSetConfig = { ...this.props.dataContainer.state.jokerSetConfig };
+    this.setState({ jokerSetConfig });
   }
 
   edit = (ref: any) => {
@@ -60,9 +58,10 @@ export default class JokerSetsScreen extends React.Component<ScreenProps, JokerS
 
   saveChanges = (value: string) => {
     if (value && value !== "") {
-      this.storage.setJokerSetConfig(this.state.jokerSetConfig);
+      this.props.dataContainer.setJokerSetConfig(this.state.jokerSetConfig);
     } else {
-      this.storage.getJokerSetConfig().then(jokerSetConfig => this.setState({ jokerSetConfig }));
+      let jokerSetConfig = { ...this.props.dataContainer.state.jokerSetConfig };
+      this.setState({ jokerSetConfig });
     }
   };
 
@@ -71,12 +70,12 @@ export default class JokerSetsScreen extends React.Component<ScreenProps, JokerS
     // jokerSetConfig = new JokerSetConfig(false, [0.05, 0.1]);
     // console.log("TEST :", jokerSetConfig);
     jokerSetConfig.enabled = value;
-    this.storage.setJokerSetConfig(jokerSetConfig).then(() => this.setState({ jokerSetConfig }));
+    this.props.dataContainer.setJokerSetConfig(jokerSetConfig).then(() => this.setState({ jokerSetConfig }));
   };
 
   resetDefaults = () => {
     let jokerSetConfig = new JokerSetConfig(true, 5);
-    this.storage.setJokerSetConfig(jokerSetConfig).then(() => this.setState({ jokerSetConfig }));
+    this.props.dataContainer.setJokerSetConfig(jokerSetConfig).then(() => this.setState({ jokerSetConfig }));
   };
 
   renderContent() {

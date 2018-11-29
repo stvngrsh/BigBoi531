@@ -18,7 +18,6 @@ import {
   Separator,
   Segment
 } from "native-base";
-import Storage from "../containers/Storage";
 import { ScreenProps } from "../App";
 import { PyramidSetConfig } from "../Types";
 
@@ -27,17 +26,15 @@ export interface PyramidSetScreenState {
 }
 
 export default class PyramidSetScreen extends React.Component<ScreenProps, PyramidSetScreenState> {
-  storage: Storage;
-
   state: PyramidSetScreenState = {};
 
   constructor(props: ScreenProps) {
     super(props);
-    this.storage = new Storage();
   }
 
   componentDidMount() {
-    this.storage.getPyramidSetConfig().then(pyramidSetConfig => this.setState({ pyramidSetConfig }));
+    let pyramidSetConfig = { ...this.props.dataContainer.state.pyramidSetConfig };
+    this.setState({ pyramidSetConfig });
   }
 
   // edit = (ref: any) => {
@@ -68,7 +65,7 @@ export default class PyramidSetScreen extends React.Component<ScreenProps, Pyram
   toggleEnabled = (value: boolean) => {
     let pyramidSetConfig = { ...this.state.pyramidSetConfig! };
     pyramidSetConfig.enabled = value;
-    this.storage.setPyramidSetConfig(pyramidSetConfig).then(() => this.setState({ pyramidSetConfig }));
+    this.props.dataContainer.setPyramidSetConfig(pyramidSetConfig).then(() => this.setState({ pyramidSetConfig }));
   };
 
   renderContent() {

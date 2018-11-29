@@ -22,14 +22,6 @@ const PYRAMID_SET_CONFIG = "PYRAMID_SET_CONFIG";
 const WARMUP_SET_CONFIG = "WARMUP_SET_CONFIG";
 const BBB_SET_CONFIG = "BBB_SET_CONFIG";
 
-export type DataContainerState = {
-  header: string;
-  currentCycle?: CycleData;
-  pastCycles?: CycleData[];
-  oneRepMax?: OneRepMax;
-  restTimes?: RestTimes;
-};
-
 export default class Storage {
   async getWarmupSetConfig(): Promise<WarmupSetConfig> {
     let json = await AsyncStorage.getItem(WARMUP_SET_CONFIG);
@@ -139,6 +131,10 @@ export default class Storage {
       return undefined;
     }
   }
+
+  setCurrentCycle = async (cycle: CycleData) => {
+    AsyncStorage.setItem(CURRENT_CYCLE, JSON.stringify(cycle));
+  };
 
   getHistory = async (): Promise<TrackedLift[]> => {
     let json = await AsyncStorage.getItem(HISTORY);

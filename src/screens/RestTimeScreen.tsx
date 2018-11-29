@@ -24,7 +24,6 @@ export interface RestTimeScreenState {
 }
 
 export default class RestTimeScreen extends React.Component<ScreenProps, RestTimeScreenState> {
-  storage: Storage;
   warmupRef: any;
   mainSetRef: any;
   secondaryRef: any;
@@ -36,7 +35,6 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
 
   constructor(props: ScreenProps) {
     super(props);
-    this.storage = new Storage();
     this.warmupRef = React.createRef();
     this.mainSetRef = React.createRef();
     this.secondaryRef = React.createRef();
@@ -44,7 +42,8 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
   }
 
   componentDidMount() {
-    this.storage.getRestTimes().then(restTimes => this.setState({ restTimes }));
+    let restTimes = { ...this.props.dataContainer.state.restTimes };
+    this.setState({ restTimes });
   }
 
   edit = (ref: any) => {
@@ -66,15 +65,16 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
 
   saveChanges = (value: string) => {
     if (value && value !== "") {
-      this.storage.setRestTimes(this.state.restTimes);
+      this.props.dataContainer.setRestTimes(this.state.restTimes);
     } else {
-      this.storage.getRestTimes().then(restTimes => this.setState({ restTimes }));
+      let restTimes = { ...this.props.dataContainer.state.restTimes };
+      this.setState({ restTimes });
     }
   };
 
   resetDefaults = () => {
     let restTimes = new RestTimes();
-    this.storage.setRestTimes(restTimes).then(() => this.setState({ restTimes }));
+    this.props.dataContainer.setRestTimes(restTimes).then(() => this.setState({ restTimes }));
   };
 
   renderContent() {

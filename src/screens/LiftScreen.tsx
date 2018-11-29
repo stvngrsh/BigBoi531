@@ -1,45 +1,35 @@
-import * as React from "react";
-import { StyleSheet, Alert, ScrollView } from "react-native";
+import { differenceInSeconds } from "date-fns";
+import { Constants, Notifications, Permissions } from "expo";
 import {
-  Lift,
-  OneRepMax,
-  CycleData,
-  RestTimes,
-  WarmupSetConfig,
-  FSLSetConfig,
-  JokerSetConfig,
-  PyramidSetConfig,
-  TrackedLift
-} from "../Types";
-import {
-  Container,
-  Card,
   Body,
-  Tabs,
-  Tab,
   Button,
-  Text,
+  Card,
+  CardItem,
+  Container,
+  Content,
   Header,
-  Title,
+  Icon,
   Left,
   Right,
-  Icon,
-  Content,
-  Spinner,
-  CardItem,
+  Tab,
+  Tabs,
+  Text,
+  Title,
   View,
-  CheckBox
+  Input
 } from "native-base";
-import { Notifications, Permissions, Constants } from "expo";
-import RestTimer from "../components/RestTimer";
-import { differenceInSeconds } from "date-fns";
-import MultiSetCardItem from "../components/MulitSetCardItem";
-import { Screens, ScreenProps } from "../App";
-import Storage from "../containers/Storage";
+import * as React from "react";
+import { Alert, Platform, StyleSheet, TouchableHighlight, TouchableNativeFeedback } from "react-native";
 import { Subscribe } from "unstated";
+import { Colors } from "../../native-base-theme/Colors";
+import { ScreenProps, Screens } from "../App";
+import RestTimer from "../components/RestTimer";
+import { SetCard } from "../components/SetCard";
+import { SetItem } from "../components/SetItem";
 import DataContainer from "../containers/DataContainer";
-import { Weight } from "../components/Weight";
-import PlateCounter from "../components/PlateCounter";
+import Storage from "../containers/Storage";
+import { Lift, TrackedLift } from "../Types";
+import Modal from "react-native-modal";
 
 const POUNDS_TO_KILOS = 0.453592;
 const POUNDS = true;
@@ -66,70 +56,42 @@ const localNotification = {
   }
 };
 
+const TouchableComponent = Platform.OS === "ios" ? TouchableHighlight : TouchableNativeFeedback;
+
 export interface LiftScreenState {
+  repCount: number;
   tabNum: number;
   timer: any;
   stopTime: Date;
   timeRemaining: number;
-  restTimes?: RestTimes;
-  oneRepMax?: OneRepMax;
-  warmupSetConfig?: WarmupSetConfig;
-  fslSetConfig?: FSLSetConfig;
-  jokerSetConfig?: JokerSetConfig;
-  pyramidSetConfig?: PyramidSetConfig;
+  modalOpen: boolean;
 }
 
 export default class LiftScreen extends React.Component<ScreenProps, LiftScreenState> {
   storage: Storage;
+  finished: boolean;
 
   constructor(props: ScreenProps) {
     super(props);
     this.storage = new Storage();
+    this.finished = false;
   }
 
   state: LiftScreenState = {
+    repCount: 0,
     tabNum: 0,
     timer: null,
     stopTime: new Date(),
-    timeRemaining: 0
+    timeRemaining: 0,
+    modalOpen: false
   };
 
-  getSettings() {
-    Promise.all([
-      this.storage.getRestTimes(),
-      this.storage.getOneRepMax(),
-      this.storage.getWarmupSetConfig(),
-      this.storage.getFSLSetConfig(),
-      this.storage.getJokerSetConfig(),
-      this.storage.getPyramidSetConfig()
-    ]).then(([restTimes, oneRepMax, warmupSetConfig, fslSetConfig, jokerSetConfig, pyramidSetConfig]) => {
-      this.setState({
-        restTimes,
-        oneRepMax,
-        warmupSetConfig,
-        fslSetConfig,
-        jokerSetConfig,
-        pyramidSetConfig
-      });
-    });
+  shouldComponentUpdate() {
+    return this.props.navigation.isFocused();
   }
 
   async componentDidMount() {
-    this.getSettings();
-    // let currentCycle = await this.props.dataContainer.getCurrentCycle();
-    let currentLift = await this.props.dataContainer.getCurrentLift();
-
-    // let lifts = [];
-    // let mainSets = [];
-
-    // let finishedSets = [];
-    // for (let i = 0; i < lifts.length; i++) {
-    //   let temp = [];
-    //   for (let j = 0; j < mainSets.length; j++) {
-    //     temp.push(false);
-    //   }
-    //   finishedSets.push(temp);
-    // }
+    this.props.dataContainer.getCurrentCycle().then(() => this.props.dataContainer.openLift(1, 1, () => null));
 
     let result = await Permissions.askAsync(Permissions.NOTIFICATIONS);
     if (Constants.isDevice && result.status === "granted") {
@@ -137,24 +99,48 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     }
   }
 
+  getWeight = (percentage: number, lift: Lift) => {
+    let { oneRepMax } = this.props.dataContainer.state;
+    //DEBUG//
+    // oneRepMax = new OneRepMax();
+    //DEBUG//
+    let multiplier = percentage / 100;
+    let amount = 0;
+    switch (lift) {
+      case Lift.BENCH:
+        amount = oneRepMax.bench * multiplier;
+        break;
+      case Lift.SQUAT:
+        amount = oneRepMax.squat * multiplier;
+        break;
+      case Lift.PRESS:
+        amount = oneRepMax.press * multiplier;
+        break;
+      case Lift.DEADS:
+        amount = oneRepMax.deads * multiplier;
+        break;
+    }
+    return Math.floor(amount / LOWEST_WEIGHT) * LOWEST_WEIGHT;
+  };
+
   finishSet = (key: keyof TrackedLift, liftIndex: number, setIndex: number) => {
-    let currentLift = { ...this.props.dataContainer.state.currentLift };
+    const data = this.props.dataContainer.state;
+
+    let currentLift = { ...data.currentLift };
     let finishedSets = [...(currentLift as any)[key]];
     let finishedSetsInner = [...finishedSets[liftIndex]];
     finishedSetsInner[setIndex] = !finishedSetsInner[setIndex];
     finishedSets[liftIndex] = finishedSetsInner;
     currentLift[key] = finishedSets;
-    this.props.dataContainer.setState({ currentLift }, () =>
-      console.log("this.props.dataContainer.state :", this.props.dataContainer.state)
-    );
+    this.props.dataContainer.setState({ currentLift }, () => console.log("data :", data));
 
     if (finishedSetsInner[setIndex] === true) {
       if (key === "mainSets") {
-        this.startTimer(this.state.restTimes.mainSet);
+        this.startTimer(data.restTimes.mainSet);
       } else if (key === "warmupSets") {
-        this.startTimer(this.state.restTimes.warmup);
+        this.startTimer(data.restTimes.warmup);
       } else {
-        this.startTimer(this.state.restTimes.fsl);
+        this.startTimer(data.restTimes.fsl);
       }
     }
   };
@@ -190,28 +176,17 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     });
   };
 
-  getWeight = (percentage: number, lift: Lift) => {
-    let { oneRepMax } = this.state;
-    let multiplier = percentage / 100;
-    let amount = 0;
-    switch (lift) {
-      case Lift.BENCH:
-        amount = oneRepMax.bench * multiplier;
-        break;
-      case Lift.SQUAT:
-        amount = oneRepMax.squat * multiplier;
-        break;
-      case Lift.PRESS:
-        amount = oneRepMax.press * multiplier;
-        break;
-      case Lift.DEADS:
-        amount = oneRepMax.deads * multiplier;
-        break;
+  componentWillUnmount() {
+    clearInterval(this.state.timer);
+    if (this.finished) {
+      this.props.dataContainer.finishWorkout();
     }
-    return Math.floor(amount / LOWEST_WEIGHT) * LOWEST_WEIGHT;
-  };
+  }
 
-  saveWorkout = () => {};
+  saveWorkout = () => {
+    this.finished = true;
+    this.props.navigation.popToTop();
+  };
 
   completeWorkout = () => {
     let message = "This will end your current session.";
@@ -223,21 +198,50 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     navigate(Screens.SETTINGS);
   };
 
+  repsPopup = (reps: number) => {
+    this.setState({ modalOpen: true, repCount: reps });
+  };
+
+  closePopup = () => {
+    this.setState({ modalOpen: false });
+  };
+
+  addRep = () => {
+    let { repCount } = this.state;
+    repCount++;
+    this.setState({ repCount });
+  };
+
+  removeRep = () => {
+    let { repCount } = this.state;
+    repCount > 0 && repCount--;
+    this.setState({ repCount });
+  };
+
   public render() {
+    console.log("lift screen render");
     return (
       <Subscribe to={[DataContainer]}>
         {(data: DataContainer) => {
-          let { oneRepMax, restTimes } = this.state;
-          let { currentCycle, currentLift } = data.state;
-          if (!oneRepMax || !restTimes || !currentCycle || !currentLift) {
+          console.log("lift screen render 2");
+          let {
+            currentCycle,
+            currentLift,
+            oneRepMax,
+            warmupSetConfig,
+            fslSetConfig,
+            jokerSetConfig,
+            pyramidSetConfig
+          } = data.state;
+
+          if (!currentLift || !currentCycle) {
             return <View />;
           }
-
+          console.log("currentCycle :", currentCycle);
           let day = currentLift.day;
           let week = currentLift.week;
           let lifts = currentCycle.lifts[currentCycle.currentDay];
 
-          let { warmupSetConfig, fslSetConfig, jokerSetConfig, pyramidSetConfig } = this.state;
           let fslNum: number[] = [];
           for (let i = 0; i < fslSetConfig.sets ? fslSetConfig.sets : 0; i++) {
             fslNum.push(1);
@@ -246,6 +250,29 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
 
           return (
             <Container>
+              <Modal backdropOpacity={0.5} backdropColor={Colors.gray} isVisible={this.state.modalOpen}>
+                <View style={styles.modalOuter}>
+                  <View style={styles.modalInner}>
+                    <Title>Reps</Title>
+                    <View style={styles.repButtons}>
+                      <Button onPress={this.removeRep} style={styles.addRemoveButton} icon info>
+                        <Icon name="remove" />
+                      </Button>
+                      <Button style={styles.addRemoveButton} disabled>
+                        <Text style={{ color: Colors.black }}>{this.state.repCount}</Text>
+                      </Button>
+                      <Button onPress={this.addRep} style={styles.addRemoveButton} icon info>
+                        <Icon name="add" />
+                      </Button>
+                    </View>
+                    <View>
+                      <Button onPress={this.closePopup} primary>
+                        <Text>Done</Text>
+                      </Button>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
               <Header>
                 <Left>
                   <Button transparent onPress={() => this.props.navigation.pop()}>
@@ -279,225 +306,126 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                           </CardItem>
                         </Card>
 
-                        {warmupSetConfig &&
-                          warmupSetConfig.enabled && (
-                            <Card>
-                              <CardItem header bordered button>
-                                <Text>Warmup Sets</Text>
-                              </CardItem>
-                              <CardItem bordered>
-                                <Body>
-                                  {warmupSetConfig.sets.map((percent, index) => {
-                                    let weight = this.getWeight(percent, lift);
+                        {warmupSetConfig && warmupSetConfig.enabled && (
+                          <SetCard title="Warmup Sets">
+                            {warmupSetConfig.sets.map((percent, index) => {
+                              let weight = this.getWeight(percent, lift);
+                              let amrep = index === warmupSetConfig.sets.length - 1;
+                              let reps = amrep ? 3 : 5;
+                              return (
+                                <SetItem
+                                  key={index}
+                                  weight={weight}
+                                  percent={percent}
+                                  amrep={amrep}
+                                  reps={reps}
+                                  checked={currentLift.warmupSets[liftIndex][index]}
+                                  finishSet={() => this.finishSet("warmupSets", liftIndex, index)}
+                                  repsPopup={() => this.repsPopup(reps)}
+                                />
+                              );
+                            })}
+                          </SetCard>
+                        )}
 
-                                    return (
-                                      <Body key={index} style={{ flexDirection: "column", alignItems: "flex-start" }}>
-                                        <Text style={styles.subTitle}>{percent}% RM</Text>
-                                        <View style={styles.set}>
-                                          <Text style={styles.text}>
-                                            <Weight weight={weight} />x
-                                            {index === warmupSetConfig.sets.length - 1 ? 3 : 5}
-                                          </Text>
-                                          <View style={styles.plates}>
-                                            <PlateCounter weight={weight} />
-                                          </View>
-                                          <View style={styles.checkboxOuter}>
-                                            <CheckBox
-                                              onPress={() => this.finishSet("warmupSets", liftIndex, index)}
-                                              style={styles.checkbox}
-                                              checked={data.state.currentLift.warmupSets[liftIndex][index]}
-                                            />
-                                          </View>
-                                        </View>
-                                      </Body>
-                                    );
-                                  })}
-                                </Body>
-                              </CardItem>
-                            </Card>
-                          )}
+                        <SetCard title="Main Sets">
+                          {WEIGHT_SCHEME[week].map((percent, index) => {
+                            let weight = this.getWeight(percent, lift);
+                            let reps = REP_SCHEME[week][index];
+                            return (
+                              <SetItem
+                                key={index}
+                                weight={weight}
+                                percent={percent}
+                                amrep={index === warmupSetConfig.sets.length - 1}
+                                reps={reps}
+                                finishSet={() => this.finishSet("mainSets", liftIndex, index)}
+                                checked={currentLift.mainSets[liftIndex][index]}
+                                repsPopup={() => this.repsPopup(reps)}
+                              />
+                            );
+                          })}
+                        </SetCard>
 
-                        <Card>
-                          <CardItem header bordered button>
-                            <Text>Main Sets</Text>
-                          </CardItem>
-                          <CardItem bordered>
-                            <Body>
-                              {WEIGHT_SCHEME[week].map((percent, index) => {
-                                let weight = this.getWeight(percent, lift);
+                        {fslSetConfig && fslSetConfig.enabled && (
+                          <SetCard title="FSL Sets">
+                            {fslSetConfig.amrep ? (
+                              <SetItem
+                                weight={this.getWeight(WEIGHT_SCHEME[week][0], lift)}
+                                percent={WEIGHT_SCHEME[week][0]}
+                                amrep={true}
+                                reps={1}
+                                finishSet={() => this.finishSet("fslSets", liftIndex, 0)}
+                                checked={currentLift.fslSets[liftIndex][0]}
+                                repsPopup={() => this.repsPopup(1)}
+                              />
+                            ) : (
+                              fslNum.map((set, index) => {
+                                let percent = WEIGHT_SCHEME[week][0];
+                                let reps = fslSetConfig.reps;
                                 return (
-                                  <Body key={index} style={{ flexDirection: "column", alignItems: "flex-start" }}>
-                                    <Text style={styles.subTitle}>{percent}% RM </Text>
-                                    <View style={styles.set}>
-                                      <Text style={styles.text}>
-                                        <Weight weight={weight} />x{REP_SCHEME[week][index]}
-                                        {index === 2 ? "+" : ""}
-                                      </Text>
-                                      <View style={styles.plates}>
-                                        <PlateCounter weight={weight} />
-                                      </View>
-                                      <View style={styles.checkboxOuter}>
-                                        <CheckBox
-                                          onPress={() => this.finishSet("mainSets", liftIndex, index)}
-                                          style={styles.checkbox}
-                                          checked={data.state.currentLift.mainSets[liftIndex][index]}
-                                        />
-                                      </View>
-                                    </View>
-                                  </Body>
+                                  <SetItem
+                                    key={index}
+                                    weight={this.getWeight(percent, lift)}
+                                    percent={percent}
+                                    reps={reps}
+                                    checked={currentLift.fslSets[liftIndex][index]}
+                                    finishSet={() => this.finishSet("fslSets", liftIndex, index)}
+                                    repsPopup={() => this.repsPopup(reps)}
+                                  />
                                 );
-                              })}
-                            </Body>
-                          </CardItem>
-                        </Card>
+                              })
+                            )}
+                          </SetCard>
+                        )}
 
-                        {fslSetConfig &&
-                          fslSetConfig.enabled && (
-                            <Card>
-                              <CardItem header bordered button>
-                                <Text>FSL Sets</Text>
-                              </CardItem>
-                              <CardItem bordered>
-                                {fslSetConfig.amrep ? (
-                                  <Body>
-                                    <Body style={{ flexDirection: "column", alignItems: "flex-start" }}>
-                                      <Text style={styles.subTitle}>{WEIGHT_SCHEME[week][0]}% RM</Text>
-                                      <View style={styles.set}>
-                                        <Text style={styles.text}>
-                                          <Weight weight={this.getWeight(WEIGHT_SCHEME[week][0], lift)} />x 1+
-                                        </Text>
-                                        <View style={styles.plates}>
-                                          <PlateCounter weight={this.getWeight(WEIGHT_SCHEME[week][0], lift)} />
-                                        </View>
-                                        <View style={styles.checkboxOuter}>
-                                          <CheckBox
-                                            onPress={() => this.finishSet("fslSets", liftIndex, 0)}
-                                            style={styles.checkbox}
-                                            checked={data.state.currentLift.fslSets[liftIndex][0]}
-                                          />
-                                        </View>
-                                      </View>
-                                    </Body>
-                                  </Body>
-                                ) : (
-                                  <Body>
-                                    {fslNum.map((set, index) => {
-                                      return (
-                                        <Body key={index} style={{ flexDirection: "column", alignItems: "flex-start" }}>
-                                          <Text style={styles.subTitle}>{WEIGHT_SCHEME[week][0]}% RM</Text>
-                                          <View style={styles.set}>
-                                            <Text style={styles.text}>
-                                              <Weight weight={this.getWeight(WEIGHT_SCHEME[week][0], lift)} />x{" "}
-                                              {fslSetConfig.reps}
-                                            </Text>
-                                            <View style={styles.plates}>
-                                              <PlateCounter weight={this.getWeight(WEIGHT_SCHEME[week][0], lift)} />
-                                            </View>
-                                            <View style={styles.checkboxOuter}>
-                                              <CheckBox
-                                                onPress={() => this.finishSet("fslSets", liftIndex, index)}
-                                                style={styles.checkbox}
-                                                checked={data.state.currentLift.fslSets[liftIndex][index]}
-                                              />
-                                            </View>
-                                          </View>
-                                        </Body>
-                                      );
-                                    })}
-                                  </Body>
-                                )}
-                              </CardItem>
-                            </Card>
-                          )}
+                        {jokerSetConfig && jokerSetConfig.enabled && (
+                          <SetCard title="Joker Sets">
+                            {jokerNum.map((set, index) => {
+                              let reps = REP_SCHEME[week][2];
+                              let percent = WEIGHT_SCHEME[week][2] + jokerSetConfig.increase * (index + 1);
+                              return (
+                                <SetItem
+                                  key={index}
+                                  weight={this.getWeight(percent, lift)}
+                                  percent={percent}
+                                  reps={reps}
+                                  amrep={true}
+                                  checked={currentLift.jokerSets[liftIndex][index]}
+                                  finishSet={() => this.finishSet("jokerSets", liftIndex, index)}
+                                  repsPopup={() => this.repsPopup(reps)}
+                                />
+                              );
+                            })}
+                          </SetCard>
+                        )}
 
-                        {jokerSetConfig &&
-                          jokerSetConfig.enabled && (
-                            <Card>
-                              <CardItem header bordered button>
-                                <Text>Joker Sets</Text>
-                              </CardItem>
-                              <CardItem bordered>
-                                <Body>
-                                  {jokerNum.map((set, index) => {
-                                    return (
-                                      <Body key={index} style={{ flexDirection: "column", alignItems: "flex-start" }}>
-                                        <Text style={styles.subTitle}>
-                                          {WEIGHT_SCHEME[week][2] + jokerSetConfig.increase * (index + 1)}% RM
-                                        </Text>
-                                        <View style={styles.set}>
-                                          <Text style={styles.text}>
-                                            <Weight
-                                              weight={WEIGHT_SCHEME[week][2] + jokerSetConfig.increase * (index + 1)}
-                                            />
-                                            x{REP_SCHEME[week][2]}+
-                                          </Text>
-                                          <View style={styles.plates}>
-                                            <PlateCounter
-                                              weight={WEIGHT_SCHEME[week][2] + jokerSetConfig.increase * (index + 1)}
-                                            />
-                                          </View>
-                                          <View style={styles.checkboxOuter}>
-                                            <CheckBox
-                                              onPress={() => this.finishSet("jokerSets", liftIndex, index)}
-                                              style={styles.checkbox}
-                                              checked={data.state.currentLift.jokerSets[liftIndex][index]}
-                                            />
-                                          </View>
-                                        </View>
-                                      </Body>
-                                    );
-                                  })}
-                                </Body>
-                              </CardItem>
-                            </Card>
-                          )}
-
-                        {pyramidSetConfig &&
-                          pyramidSetConfig.enabled && (
-                            <Card>
-                              <CardItem header bordered button>
-                                <Text>Pyramid Sets</Text>
-                              </CardItem>
-                              <CardItem bordered>
-                                <Body>
-                                  {WEIGHT_SCHEME[week]
-                                    .map((percent, index) => {
-                                      let weight = this.getWeight(percent, lift);
-
-                                      if (index !== 2) {
-                                        return (
-                                          <Body
-                                            key={index}
-                                            style={{ flexDirection: "column", alignItems: "flex-start" }}
-                                          >
-                                            <Text style={styles.subTitle}>{percent}% RM </Text>
-                                            <View style={styles.set}>
-                                              <Text style={styles.text}>
-                                                <Weight weight={weight} />x{REP_SCHEME[week][index]}
-                                                {index === 2 ? "+" : ""}
-                                              </Text>
-                                              <View style={styles.plates}>
-                                                <PlateCounter weight={weight} />
-                                              </View>
-                                              <View style={styles.checkboxOuter}>
-                                                <CheckBox
-                                                  onPress={() => this.finishSet("pyramidSets", liftIndex, index)}
-                                                  style={styles.checkbox}
-                                                  checked={data.state.currentLift.pyramidSets[liftIndex][index]}
-                                                />
-                                              </View>
-                                            </View>
-                                          </Body>
-                                        );
-                                      } else {
-                                        return null;
-                                      }
-                                    })
-                                    .reverse()}
-                                </Body>
-                              </CardItem>
-                            </Card>
-                          )}
+                        {pyramidSetConfig && pyramidSetConfig.enabled && (
+                          <SetCard title="Pyramid Sets">
+                            {WEIGHT_SCHEME[week]
+                              .map((percent, index) => {
+                                let weight = this.getWeight(percent, lift);
+                                let reps = REP_SCHEME[week][index];
+                                if (index !== 2) {
+                                  return (
+                                    <SetItem
+                                      key={index}
+                                      weight={weight}
+                                      percent={percent}
+                                      reps={reps}
+                                      amrep={index === 2}
+                                      checked={currentLift.pyramidSets[liftIndex][index]}
+                                      finishSet={() => this.finishSet("pyramidSets", liftIndex, index)}
+                                      repsPopup={() => this.repsPopup(reps)}
+                                    />
+                                  );
+                                } else {
+                                  return null;
+                                }
+                              })
+                              .reverse()}
+                          </SetCard>
+                        )}
 
                         <Body style={{ width: "100%", flexDirection: "row", justifyContent: "center" }}>
                           <Button
@@ -572,17 +500,38 @@ const checkboxTheme = {
 };
 
 const styles = StyleSheet.create({
+  repButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center"
+  },
+  addRemoveButton: {
+    margin: 10
+  },
+  modalOuter: {
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  modalInner: {
+    borderRadius: 10,
+    backgroundColor: Colors.dark,
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    width: "70%",
+    height: "55%"
+  },
   set: {
     width: "100%",
     flexDirection: "row",
     paddingTop: 5,
     paddingBottom: 5,
     alignItems: "center",
-    justifyContent: "space-between"
+    justifyContent: "flex-start"
   },
   text: {
     fontSize: 25,
-    width: "30%"
+    width: "35%"
   },
 
   plates: {
@@ -597,7 +546,10 @@ const styles = StyleSheet.create({
     margin: 5
   },
   checkboxOuter: {
-    width: "15%"
+    flex: 0,
+    padding: 5,
+    justifyContent: "center",
+    alignItems: "center"
   },
   checkBoxDisabled: {
     padding: 5,
@@ -608,14 +560,36 @@ const styles = StyleSheet.create({
     margin: 5
   },
   checkbox: {
-    padding: 5,
-    paddingLeft: 8,
-    borderRadius: 30,
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    alignSelf: "flex-start",
+    borderRadius: 30 / 2,
     width: 30,
-    height: 30,
-    margin: 5
+    height: 30
   },
   subTitle: {
+    paddingTop: 5,
     fontSize: 14
+  },
+  noPadding: {
+    paddingLeft: 0,
+    paddingRight: 0
+  },
+  touchablePadding: {
+    width: "100%",
+    flexDirection: "row",
+
+    paddingLeft: 15,
+    paddingRight: 15
+  },
+  touchableInner: {
+    flex: -1,
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 3,
+    paddingBottom: 3
   }
 });
