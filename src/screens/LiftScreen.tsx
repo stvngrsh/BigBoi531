@@ -30,6 +30,8 @@ import DataContainer from "../containers/DataContainer";
 import Storage from "../containers/Storage";
 import { Lift, TrackedLift } from "../Types";
 import Modal from "react-native-modal";
+//@ts-ignore
+import Swipeable from "react-native-swipeable";
 
 const POUNDS_TO_KILOS = 0.453592;
 const POUNDS = true;
@@ -91,7 +93,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
   }
 
   async componentDidMount() {
-    this.props.dataContainer.getCurrentCycle().then(() => this.props.dataContainer.openLift(1, 1, () => null));
+    // this.props.dataContainer.getCurrentCycle().then(() => this.props.dataContainer.openLift(1, 1, () => null));
 
     let result = await Permissions.askAsync(Permissions.NOTIFICATIONS);
     if (Constants.isDevice && result.status === "granted") {
@@ -101,9 +103,6 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
 
   getWeight = (percentage: number, lift: Lift) => {
     let { oneRepMax } = this.props.dataContainer.state;
-    //DEBUG//
-    // oneRepMax = new OneRepMax();
-    //DEBUG//
     let multiplier = percentage / 100;
     let amount = 0;
     switch (lift) {
@@ -123,18 +122,30 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     return Math.floor(amount / LOWEST_WEIGHT) * LOWEST_WEIGHT;
   };
 
-  finishSet = (key: keyof TrackedLift, liftIndex: number, setIndex: number) => {
+  finishSet = (
+    key: keyof TrackedLift,
+    reps: number,
+    liftIndex: number,
+    setIndex: number,
+    fromModal: boolean = false
+  ) => {
     const data = this.props.dataContainer.state;
 
     let currentLift = { ...data.currentLift };
     let finishedSets = [...(currentLift as any)[key]];
     let finishedSetsInner = [...finishedSets[liftIndex]];
-    finishedSetsInner[setIndex] = !finishedSetsInner[setIndex];
+    if (fromModal) {
+      finishedSetsInner[setIndex] = reps;
+    } else if (finishedSetsInner[setIndex] === undefined) {
+      finishedSetsInner[setIndex] = reps;
+    } else {
+      finishedSetsInner[setIndex] = undefined;
+    }
     finishedSets[liftIndex] = finishedSetsInner;
     currentLift[key] = finishedSets;
-    this.props.dataContainer.setState({ currentLift }, () => console.log("data :", data));
+    this.props.dataContainer.setState({ currentLift });
 
-    if (finishedSetsInner[setIndex] === true) {
+    if (finishedSetsInner[setIndex] !== undefined && finishedSetsInner[setIndex] > 0) {
       if (key === "mainSets") {
         this.startTimer(data.restTimes.mainSet);
       } else if (key === "warmupSets") {
@@ -198,11 +209,15 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     navigate(Screens.SETTINGS);
   };
 
-  repsPopup = (reps: number) => {
+  repsPopup = (reps: number, finishSet: (reps: number, fromModal?: boolean) => void) => {
+    this.modalDone = finishSet;
     this.setState({ modalOpen: true, repCount: reps });
   };
 
+  modalDone: (reps: number, fromModal?: boolean) => void;
+
   closePopup = () => {
+    this.modalDone(this.state.repCount, true);
     this.setState({ modalOpen: false });
   };
 
@@ -219,11 +234,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
   };
 
   public render() {
-    console.log("lift screen render");
     return (
       <Subscribe to={[DataContainer]}>
         {(data: DataContainer) => {
-          console.log("lift screen render 2");
           let {
             currentCycle,
             currentLift,
@@ -237,10 +250,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
           if (!currentLift || !currentCycle) {
             return <View />;
           }
-          console.log("currentCycle :", currentCycle);
           let day = currentLift.day;
           let week = currentLift.week;
-          let lifts = currentCycle.lifts[currentCycle.currentDay];
+          let lifts = currentCycle.lifts[day];
 
           let fslNum: number[] = [];
           for (let i = 0; i < fslSetConfig.sets ? fslSetConfig.sets : 0; i++) {
@@ -312,6 +324,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                               let weight = this.getWeight(percent, lift);
                               let amrep = index === warmupSetConfig.sets.length - 1;
                               let reps = amrep ? 3 : 5;
+                              let finishSet = (completedReps: number, fromModal?: boolean) =>
+                                this.finishSet("warmupSets", completedReps, liftIndex, index, fromModal);
+                              let checked = currentLift.warmupSets[liftIndex][index];
                               return (
                                 <SetItem
                                   key={index}
@@ -319,9 +334,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                                   percent={percent}
                                   amrep={amrep}
                                   reps={reps}
-                                  checked={currentLift.warmupSets[liftIndex][index]}
-                                  finishSet={() => this.finishSet("warmupSets", liftIndex, index)}
-                                  repsPopup={() => this.repsPopup(reps)}
+                                  checked={checked}
+                                  finishSet={() => finishSet(reps)}
+                                  repsPopup={() => this.repsPopup(checked !== undefined ? checked : reps, finishSet)}
                                 />
                               );
                             })}
@@ -332,6 +347,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                           {WEIGHT_SCHEME[week].map((percent, index) => {
                             let weight = this.getWeight(percent, lift);
                             let reps = REP_SCHEME[week][index];
+                            let finishSet = (reps: number, fromModal?: boolean) =>
+                              this.finishSet("mainSets", reps, liftIndex, index, fromModal);
+                            let checked = currentLift.mainSets[liftIndex][index];
                             return (
                               <SetItem
                                 key={index}
@@ -339,9 +357,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                                 percent={percent}
                                 amrep={index === warmupSetConfig.sets.length - 1}
                                 reps={reps}
-                                finishSet={() => this.finishSet("mainSets", liftIndex, index)}
-                                checked={currentLift.mainSets[liftIndex][index]}
-                                repsPopup={() => this.repsPopup(reps)}
+                                finishSet={() => finishSet(reps)}
+                                checked={checked}
+                                repsPopup={() => this.repsPopup(checked !== undefined ? checked : reps, finishSet)}
                               />
                             );
                           })}
@@ -355,23 +373,38 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                                 percent={WEIGHT_SCHEME[week][0]}
                                 amrep={true}
                                 reps={1}
-                                finishSet={() => this.finishSet("fslSets", liftIndex, 0)}
+                                finishSet={() => this.finishSet("fslSets", 1, liftIndex, 0)}
                                 checked={currentLift.fslSets[liftIndex][0]}
-                                repsPopup={() => this.repsPopup(1)}
+                                repsPopup={() =>
+                                  this.repsPopup(1, (reps: number) =>
+                                    this.finishSet(
+                                      "fslSets",
+                                      currentLift.fslSets[liftIndex][0] !== undefined
+                                        ? currentLift.fslSets[liftIndex][0]
+                                        : reps,
+                                      liftIndex,
+                                      0,
+                                      true
+                                    )
+                                  )
+                                }
                               />
                             ) : (
                               fslNum.map((set, index) => {
                                 let percent = WEIGHT_SCHEME[week][0];
                                 let reps = fslSetConfig.reps;
+                                let finishSet = (reps: number, fromModal?: boolean) =>
+                                  this.finishSet("fslSets", reps, liftIndex, index, fromModal);
+                                let checked = currentLift.fslSets[liftIndex][index];
                                 return (
                                   <SetItem
                                     key={index}
                                     weight={this.getWeight(percent, lift)}
                                     percent={percent}
                                     reps={reps}
-                                    checked={currentLift.fslSets[liftIndex][index]}
-                                    finishSet={() => this.finishSet("fslSets", liftIndex, index)}
-                                    repsPopup={() => this.repsPopup(reps)}
+                                    checked={checked}
+                                    finishSet={() => finishSet(reps)}
+                                    repsPopup={() => this.repsPopup(checked !== undefined ? checked : reps, finishSet)}
                                   />
                                 );
                               })
@@ -384,6 +417,8 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                             {jokerNum.map((set, index) => {
                               let reps = REP_SCHEME[week][2];
                               let percent = WEIGHT_SCHEME[week][2] + jokerSetConfig.increase * (index + 1);
+                              let finishSet = (reps: number) => this.finishSet("jokerSets", reps, liftIndex, index);
+                              let checked = currentLift.jokerSets[liftIndex][index];
                               return (
                                 <SetItem
                                   key={index}
@@ -391,9 +426,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                                   percent={percent}
                                   reps={reps}
                                   amrep={true}
-                                  checked={currentLift.jokerSets[liftIndex][index]}
-                                  finishSet={() => this.finishSet("jokerSets", liftIndex, index)}
-                                  repsPopup={() => this.repsPopup(reps)}
+                                  checked={checked}
+                                  finishSet={() => finishSet(reps)}
+                                  repsPopup={() => this.repsPopup(checked !== undefined ? checked : reps, finishSet)}
                                 />
                               );
                             })}
@@ -406,6 +441,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                               .map((percent, index) => {
                                 let weight = this.getWeight(percent, lift);
                                 let reps = REP_SCHEME[week][index];
+                                let finishSet = (reps: number) => () =>
+                                  this.finishSet("pyramidSets", reps, liftIndex, index);
+                                let checked = currentLift.jokerSets[liftIndex][index];
                                 if (index !== 2) {
                                   return (
                                     <SetItem
@@ -414,9 +452,11 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                                       percent={percent}
                                       reps={reps}
                                       amrep={index === 2}
-                                      checked={currentLift.pyramidSets[liftIndex][index]}
-                                      finishSet={() => this.finishSet("pyramidSets", liftIndex, index)}
-                                      repsPopup={() => this.repsPopup(reps)}
+                                      checked={checked}
+                                      finishSet={() => this.finishSet("pyramidSets", reps, liftIndex, index)}
+                                      repsPopup={() =>
+                                        this.repsPopup(checked !== undefined ? checked : reps, finishSet)
+                                      }
                                     />
                                   );
                                 } else {

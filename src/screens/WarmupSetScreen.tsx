@@ -76,7 +76,7 @@ export default class WarmupSetsScreen extends React.Component<ScreenProps, Warmu
     let warmupSetConfig = { ...this.state.warmupSetConfig! };
     let sets = [...warmupSetConfig.sets];
     if (sets.length > 0) {
-      sets.push(Math.max(sets[sets.length - 1] + 10, 100));
+      sets.push(sets[sets.length - 1] + 10);
     } else {
       sets.push(40);
     }

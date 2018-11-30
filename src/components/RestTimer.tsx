@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { Footer, FooterTab, Button, Icon, Text } from "native-base";
 import { StyleSheet } from "react-native";
 import { format, addSeconds } from "date-fns";
+
 interface RestTimerProps {
   timeRemaining: number;
 }

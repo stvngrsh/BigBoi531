@@ -26,7 +26,7 @@ export interface HomeScreenState {
   loaded: boolean;
 }
 
-const DEFAULT_CYCLE = [[Lift.BENCH, Lift.SQUAT], [Lift.DEADS, Lift.PRESS], [Lift.SQUAT, Lift.BENCH]];
+const DEFAULT_CYCLE = [[Lift.SQUAT, Lift.BENCH], [Lift.DEADS, Lift.PRESS], [Lift.BENCH, Lift.SQUAT]];
 
 export default class HomeScreen extends React.Component<ScreenProps, HomeScreenState> {
   state: HomeScreenState = {

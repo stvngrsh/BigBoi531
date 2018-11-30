@@ -68,16 +68,16 @@ export class TrackedLift {
   week: number;
   day: number;
 
-  warmupSets?: boolean[][];
+  warmupSets?: number[][];
 
-  mainSets: boolean[][];
+  mainSets: number[][];
 
-  fslSets?: boolean[][];
-  jokerSets?: boolean[][];
-  pyramidSets?: boolean[][];
-  bbbSets?: boolean[][];
+  fslSets?: number[][];
+  jokerSets?: number[][];
+  pyramidSets?: number[][];
+  bbbSets?: number[][];
 
-  finishedAssistance?: boolean[][];
+  finishedAssistance?: number[][];
 
   constructor(week: number, day: number, lifts: number) {
     this.week = week;
