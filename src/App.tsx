@@ -21,6 +21,7 @@ import PyramidSetScreen from "./screens/PyramidSetScreen";
 import WarmupSetsScreen from "./screens/WarmupSetScreen";
 import CycleOverviewScreen from "./screens/CycleOverviewScreen";
 import LiftScreen from "./screens/LiftScreen";
+import BBBSetsScreen from "./screens/BBBSetsScreen";
 
 YellowBox.ignoreWarnings(["Remote debugger"]);
 
@@ -113,14 +114,15 @@ class StackNav extends React.Component<StackNavProps, any> {
       },
       [Screens.WARMUP_SETS]: {
         screen: (props: ScreenProps) => <WarmupSetsScreen dataContainer={this.props.dataContainer} {...props} />
+      },
+      [Screens.BBB_SETS]: {
+        screen: (props: ScreenProps) => <BBBSetsScreen dataContainer={this.props.dataContainer} {...props} />
       }
-      // [Screens.BBB_SETS]: {
-      //   screen: (props: ScreenProps) => <BBBSetScreen dataContainer={this.props.dataContainer} {...props} />
-      // }
     },
     {
       navigationOptions: ({ navigation }) => ({}),
       initialRouteName: Screens.HOME,
+      // initialRouteName: Screens.LIFT,
       headerMode: "none"
     }
   );

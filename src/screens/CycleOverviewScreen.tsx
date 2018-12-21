@@ -22,6 +22,40 @@ import { TrackedLift, Lift } from "../Types";
 import { Subscribe } from "unstated";
 import DataContainer from "../containers/DataContainer";
 import { Colors } from "../../native-base-theme/Colors";
+import styled from "styled-components";
+import { ScreenHeader } from "../components/ScreenHeader";
+
+const Week = styled(View)`
+  flex-direction: column;
+`;
+
+const WeekHeading = styled(View)`
+  padding: 10px;
+  flex-direction: row;
+  justify-content: space-between;
+`;
+
+const Icons = styled(View)`
+  flex-direction: row;
+`;
+
+const Days = styled(ScrollView)`
+  flex-direction: row;
+`;
+
+type LiftCircleProps = { isActive: boolean; isComplete: boolean };
+
+const LiftCircle = styled(Button)<LiftCircleProps>`
+  border-radius: 120;
+  height: 120;
+  width: 120;
+  margin: 10px;
+  background-color: ${(props: LiftCircleProps) =>
+    props.isActive ? Colors.warning : props.isComplete ? Colors.success : Colors.primary};
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`;
 
 export interface CycleOverviewScreenState {}
 
@@ -71,10 +105,9 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
     return (
       <Subscribe to={[DataContainer]}>
         {(data: DataContainer) => {
-          console.log("cycle overview");
           if (data.state.currentCycle) {
             let weeks: JSX.Element[] = [];
-            let weekCount = data.state.currentCycle.lifts.length;
+            let weekCount = 3;
             for (let i = 0; i < weekCount; i++) {
               let completed: boolean[] = [];
               let percent = 0;
@@ -93,26 +126,33 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
               percent *= 100;
 
               weeks.push(
-                <View key={i} style={styles.week}>
-                  <View style={styles.weekHeading}>
+                <Week key={i}>
+                  <WeekHeading>
                     <Title>WEEK {this.numToText(i)}</Title>
                     <Text>{percent}% Complete</Text>
-                  </View>
-                  <ScrollView horizontal={true} style={styles.days}>
+                  </WeekHeading>
+                  <Days horizontal={true}>
                     {data.state.currentCycle.lifts.map((lifts, j) => {
+                      const isActive = this.isActive(i, j, data);
+                      const isComplete = this.isComplete(i, j);
                       return (
-                        <Button key={j} style={this.getCircleStyle(i, j, data)} onPress={() => this.gotoLift(i, j)}>
+                        <LiftCircle
+                          key={j}
+                          isActive={isActive}
+                          isComplete={isComplete}
+                          onPress={() => this.gotoLift(i, j)}
+                        >
                           <Text>Day {j + 1}</Text>
-                          <View style={styles.icons}>
+                          <Icons>
                             {lifts.map((lift, j) => {
                               return this.getLiftIcon(lift, j);
                             })}
-                          </View>
-                        </Button>
+                          </Icons>
+                        </LiftCircle>
                       );
                     })}
-                  </ScrollView>
-                </View>
+                  </Days>
+                </Week>
               );
             }
             return <View>{weeks}</View>;
@@ -124,18 +164,21 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
     );
   }
 
-  getCircleStyle = (week: number, day: number, data: DataContainer) => {
+  isActive = (week: number, day: number, data: DataContainer) => {
     let current = data.state.currentLift;
     if (current && current.week === week && current.day === day) {
-      return styles.liftCircleActive;
-    } else {
-      for (const completed of this.props.dataContainer.state.currentCycle.trackedLifts) {
-        if (completed.week === week && completed.day === day) {
-          return styles.liftCircleComplete;
-        }
-      }
-      return styles.liftCircle;
+      return true;
     }
+    return false;
+  };
+
+  isComplete = (week: number, day: number) => {
+    for (const completed of this.props.dataContainer.state.currentCycle.trackedLifts) {
+      if (completed.week === week && completed.day === day) {
+        return true;
+      }
+    }
+    return false;
   };
 
   gotoLift = (week: number, day: number) => {
@@ -151,77 +194,14 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
   render() {
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>Workout Days</Title>
-          </Body>
-          <Right>
-            <Button onPress={this.goToSettings} transparent>
-              <Icon name="options" />
-            </Button>
-          </Right>
-        </Header>
+        <ScreenHeader
+          title="Workouts"
+          rightButtonAction={this.goToSettings}
+          rightButtonIcon="options"
+          navigation={this.props.navigation}
+        />
         <Content>{this.renderContent()}</Content>
       </Container>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  spanButton: {
-    flexDirection: "column",
-    width: "100%",
-    height: 70,
-    justifyContent: "space-around"
-  },
-  week: {
-    flexDirection: "column"
-  },
-  weekHeading: {
-    padding: 10,
-    flexDirection: "row",
-    justifyContent: "space-between"
-  },
-  days: {
-    flex: 1,
-    flexDirection: "row"
-  },
-  liftCircle: {
-    borderRadius: 120,
-    height: 120,
-    width: 120,
-    margin: 10,
-    backgroundColor: Colors.primary,
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  liftCircleActive: {
-    borderRadius: 120,
-    height: 120,
-    width: 120,
-    margin: 10,
-    backgroundColor: Colors.warning,
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  liftCircleComplete: {
-    borderRadius: 120,
-    height: 120,
-    width: 120,
-    margin: 10,
-    backgroundColor: Colors.success,
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  icons: {
-    flexDirection: "row"
-  }
-});

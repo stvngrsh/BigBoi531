@@ -1,22 +1,9 @@
+import { Body, Container, Content, List, ListItem, Right, Text, View } from "native-base";
 import React from "react";
-import { StyleSheet, TextInput } from "react-native";
-import {
-  View,
-  Button,
-  Text,
-  Icon,
-  Container,
-  Content,
-  Header,
-  Title,
-  Body,
-  List,
-  ListItem,
-  Left,
-  Right
-} from "native-base";
-import { OneRepMax } from "../Types";
 import { ScreenProps } from "../App";
+import { ScreenHeader } from "../components/ScreenHeader";
+import { InlineInput } from "../Styled";
+import { OneRepMax } from "../Types";
 
 export interface OneRepMaxScreenState {
   oneRepMax: OneRepMax;
@@ -85,12 +72,11 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
                 <Text>Bench Press</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.benchRef}
                   maxLength={3}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("bench", value)}
                   value={this.state.oneRepMax.bench.toString()}
                 />
@@ -102,11 +88,10 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
                 <Text>Squat</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.squatRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("squat", value)}
                   value={this.state.oneRepMax.squat.toString()}
                 />
@@ -118,11 +103,10 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
                 <Text>Overhead Press</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.pressRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("press", value)}
                   value={this.state.oneRepMax.press.toString()}
                 />
@@ -134,11 +118,10 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
                 <Text>Dead Lift</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.deadsRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("deads", value)}
                   value={this.state.oneRepMax.deads.toString()}
                 />
@@ -155,39 +138,9 @@ export default class OneRepMaxScreen extends React.Component<ScreenProps, OneRep
   render() {
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>One-Rep Max Values</Title>
-          </Body>
-          <Right />
-        </Header>
-        <Content contentContainerStyle={styles.container}>{this.renderContent()}</Content>
+        <ScreenHeader title="One-Rep Max Values" navigation={this.props.navigation} />
+        <Content>{this.renderContent()}</Content>
       </Container>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 5
-  },
-  spanButton: {
-    flexDirection: "column",
-    width: "100%",
-    height: 70,
-    justifyContent: "space-around"
-  },
-  inlineInput: {
-    flexDirection: "row",
-    color: "#808080",
-    fontSize: 18
-  }
-});

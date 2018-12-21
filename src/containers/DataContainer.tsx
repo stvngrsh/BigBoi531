@@ -8,7 +8,9 @@ import {
   FSLSetConfig,
   JokerSetConfig,
   PyramidSetConfig,
-  WarmupSetConfig
+  WarmupSetConfig,
+  RepScheme,
+  BBBSetConfig
 } from "../Types";
 import Storage from "./Storage";
 import { Screens } from "../App";
@@ -22,6 +24,12 @@ export type DataContainerState = {
   oneRepMax?: OneRepMax;
   restTimes?: RestTimes;
 
+  lowestPound?: number;
+  lowestKilo?: number;
+  metric?: boolean;
+  repScheme?: RepScheme;
+
+  bbbSetConfig?: BBBSetConfig;
   warmupSetConfig?: WarmupSetConfig;
   fslSetConfig?: FSLSetConfig;
   jokerSetConfig?: JokerSetConfig;
@@ -41,12 +49,32 @@ export default class DataContainer extends Container<DataContainerState> {
     this.getSettings();
   }
 
+  setLowestKilo(lowestKilo: number) {
+    return this.storage.setLowestPlate(lowestKilo, true).then(() => this.setState({ lowestKilo }));
+  }
+
+  setLowestPound(lowestPound: number) {
+    return this.storage.setLowestPlate(lowestPound, false).then(() => this.setState({ lowestPound }));
+  }
+
+  setMetric(metric: boolean) {
+    return this.storage.setMetric(metric).then(() => this.setState({ metric }));
+  }
+
+  setRepScheme(repScheme: RepScheme) {
+    return this.storage.setRepScheme(repScheme).then(() => this.setState({ repScheme }));
+  }
+
   setWarmupSetConfig(warmupSetConfig: WarmupSetConfig) {
     return this.storage.setWarmupSetConfig(warmupSetConfig).then(() => this.setState({ warmupSetConfig }));
   }
 
   setFSLSetConfig(fslSetConfig: FSLSetConfig) {
     return this.storage.setFSLSetConfig(fslSetConfig).then(() => this.setState({ fslSetConfig }));
+  }
+
+  setBBBSetConfig(bbbSetConfig: BBBSetConfig) {
+    return this.storage.setBBBSetConfig(bbbSetConfig).then(() => this.setState({ bbbSetConfig }));
   }
 
   setJokerSetConfig(jokerSetConfig: JokerSetConfig) {
@@ -90,22 +118,46 @@ export default class DataContainer extends Container<DataContainerState> {
 
   getSettings() {
     Promise.all([
+      this.storage.getBBBSetConfig(),
       this.storage.getRestTimes(),
       this.storage.getOneRepMax(),
       this.storage.getWarmupSetConfig(),
       this.storage.getFSLSetConfig(),
       this.storage.getJokerSetConfig(),
-      this.storage.getPyramidSetConfig()
-    ]).then(([restTimes, oneRepMax, warmupSetConfig, fslSetConfig, jokerSetConfig, pyramidSetConfig]) => {
-      this.setState({
-        oneRepMax,
+      this.storage.getPyramidSetConfig(),
+      this.storage.getMetric(),
+      this.storage.getLowestPlate(true),
+      this.storage.getLowestPlate(false),
+      this.storage.getRepScheme()
+    ]).then(
+      ([
+        bbbSetConfig,
         restTimes,
+        oneRepMax,
         warmupSetConfig,
         fslSetConfig,
         jokerSetConfig,
-        pyramidSetConfig
-      });
-    });
+        pyramidSetConfig,
+        metric,
+        lowestKilo,
+        lowestPound,
+        repScheme
+      ]) => {
+        this.setState({
+          bbbSetConfig,
+          restTimes,
+          oneRepMax,
+          warmupSetConfig,
+          fslSetConfig,
+          jokerSetConfig,
+          pyramidSetConfig,
+          metric,
+          lowestKilo,
+          lowestPound,
+          repScheme
+        });
+      }
+    );
   }
 
   startNewCycle(lifts: Lift[][]) {

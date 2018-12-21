@@ -1,4 +1,4 @@
-import { differenceInSeconds } from "date-fns";
+import { differenceInSeconds, isThisSecond } from "date-fns";
 import { Constants, Notifications, Permissions } from "expo";
 import {
   Body,
@@ -15,11 +15,12 @@ import {
   Tabs,
   Text,
   Title,
-  View,
-  Input
+  View
 } from "native-base";
 import * as React from "react";
-import { Alert, Platform, StyleSheet, TouchableHighlight, TouchableNativeFeedback } from "react-native";
+import { Alert } from "react-native";
+import Modal from "react-native-modal";
+import styled from "styled-components";
 import { Subscribe } from "unstated";
 import { Colors } from "../../native-base-theme/Colors";
 import { ScreenProps, Screens } from "../App";
@@ -28,18 +29,8 @@ import { SetCard } from "../components/SetCard";
 import { SetItem } from "../components/SetItem";
 import DataContainer from "../containers/DataContainer";
 import Storage from "../containers/Storage";
-import { Lift, TrackedLift } from "../Types";
-import Modal from "react-native-modal";
-//@ts-ignore
-import Swipeable from "react-native-swipeable";
-
-const POUNDS_TO_KILOS = 0.453592;
-const POUNDS = true;
-const LOWEST_WEIGHT = 2.5 * 2;
-
-const REP_SCHEME = [[5, 5, 5], [3, 3, 3], [5, 3, 1]];
-
-const WEIGHT_SCHEME = [[65, 75, 85], [70, 80, 90], [75, 85, 95]];
+import { Lift, TrackedLift, WEIGHT_SCHEME } from "../Types";
+import { ScreenHeader } from "../components/ScreenHeader";
 
 const localNotification = {
   title: "Rest over!",
@@ -58,7 +49,30 @@ const localNotification = {
   }
 };
 
-const TouchableComponent = Platform.OS === "ios" ? TouchableHighlight : TouchableNativeFeedback;
+const AddRemoveButton = styled(Button)`
+  margin: 10px;
+`;
+
+const RepButtons = styled(View)`
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+`;
+
+const ModalOuter = styled(View)`
+  justify-content: center;
+  align-items: center;
+`;
+
+const ModalInner = styled(View)`
+  border-radius: 10;
+  background-color: ${Colors.dark};
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 70%;
+  height: 55%;
+`;
 
 export interface LiftScreenState {
   repCount: number;
@@ -66,6 +80,7 @@ export interface LiftScreenState {
   timer: any;
   stopTime: Date;
   timeRemaining: number;
+  totalTime: number;
   modalOpen: boolean;
 }
 
@@ -82,9 +97,10 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
   state: LiftScreenState = {
     repCount: 0,
     tabNum: 0,
-    timer: null,
+    timer: undefined,
     stopTime: new Date(),
     timeRemaining: 0,
+    totalTime: 0,
     modalOpen: false
   };
 
@@ -93,6 +109,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
   }
 
   async componentDidMount() {
+    //DEGUB
     // this.props.dataContainer.getCurrentCycle().then(() => this.props.dataContainer.openLift(1, 1, () => null));
 
     let result = await Permissions.askAsync(Permissions.NOTIFICATIONS);
@@ -102,7 +119,13 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
   }
 
   getWeight = (percentage: number, lift: Lift) => {
-    let { oneRepMax } = this.props.dataContainer.state;
+    let { oneRepMax, metric } = this.props.dataContainer.state;
+    let lowestWeight: number;
+    if (metric) {
+      lowestWeight = this.props.dataContainer.state.lowestKilo * 2;
+    } else {
+      lowestWeight = this.props.dataContainer.state.lowestPound * 2;
+    }
     let multiplier = percentage / 100;
     let amount = 0;
     switch (lift) {
@@ -119,7 +142,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
         amount = oneRepMax.deads * multiplier;
         break;
     }
-    return Math.floor(amount / LOWEST_WEIGHT) * LOWEST_WEIGHT;
+    return Math.floor(amount / lowestWeight) * lowestWeight;
   };
 
   finishSet = (
@@ -171,8 +194,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
   };
 
   startTimer = (timeRemaining: number) => {
-    clearInterval(this.state.timer);
-    Notifications.cancelAllScheduledNotificationsAsync();
+    this.cancelTimer();
 
     let timer = setInterval(this.tick, 1000);
     let t = new Date();
@@ -183,8 +205,33 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     this.setState({
       timer,
       stopTime: t,
-      timeRemaining: timeRemaining - 1
+      timeRemaining: timeRemaining - 1,
+      totalTime: timeRemaining
     });
+  };
+
+  changeTime = (time: number) => {
+    Notifications.cancelAllScheduledNotificationsAsync();
+
+    let t = new Date(this.state.stopTime);
+    console.log("t :", t);
+    if (t) {
+      t.setSeconds(t.getSeconds() + time);
+      const schedulingOptions = { time: t };
+      Notifications.scheduleLocalNotificationAsync(localNotification, schedulingOptions);
+      this.setState({
+        timeRemaining: this.state.timeRemaining + time,
+        stopTime: t
+      });
+    }
+  };
+
+  cancelTimer = () => {
+    clearInterval(this.state.timer);
+    this.setState({
+      timer: null
+    });
+    Notifications.cancelAllScheduledNotificationsAsync();
   };
 
   componentWillUnmount() {
@@ -244,7 +291,9 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
             warmupSetConfig,
             fslSetConfig,
             jokerSetConfig,
-            pyramidSetConfig
+            pyramidSetConfig,
+            bbbSetConfig,
+            repScheme
           } = data.state;
 
           if (!currentLift || !currentCycle) {
@@ -258,48 +307,44 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
           for (let i = 0; i < fslSetConfig.sets ? fslSetConfig.sets : 0; i++) {
             fslNum.push(1);
           }
+
           let jokerNum: number[] = [1, 1];
 
+          let bbbNum: number[] = [];
+          for (let i = 0; i < bbbSetConfig.sets ? bbbSetConfig.sets : 0; i++) {
+            bbbNum.push(1);
+          }
           return (
             <Container>
               <Modal backdropOpacity={0.5} backdropColor={Colors.gray} isVisible={this.state.modalOpen}>
-                <View style={styles.modalOuter}>
-                  <View style={styles.modalInner}>
+                <ModalOuter>
+                  <ModalInner>
                     <Title>Reps</Title>
-                    <View style={styles.repButtons}>
-                      <Button onPress={this.removeRep} style={styles.addRemoveButton} icon info>
+                    <RepButtons>
+                      <AddRemoveButton onPress={this.removeRep} icon info>
                         <Icon name="remove" />
-                      </Button>
-                      <Button style={styles.addRemoveButton} disabled>
+                      </AddRemoveButton>
+                      <AddRemoveButton disabled>
                         <Text style={{ color: Colors.black }}>{this.state.repCount}</Text>
-                      </Button>
-                      <Button onPress={this.addRep} style={styles.addRemoveButton} icon info>
+                      </AddRemoveButton>
+                      <AddRemoveButton onPress={this.addRep} icon info>
                         <Icon name="add" />
-                      </Button>
-                    </View>
+                      </AddRemoveButton>
+                    </RepButtons>
                     <View>
                       <Button onPress={this.closePopup} primary>
                         <Text>Done</Text>
                       </Button>
                     </View>
-                  </View>
-                </View>
+                  </ModalInner>
+                </ModalOuter>
               </Modal>
-              <Header>
-                <Left>
-                  <Button transparent onPress={() => this.props.navigation.pop()}>
-                    <Icon name="arrow-back" />
-                  </Button>
-                </Left>
-                <Body>
-                  <Title>Day {day + 1}</Title>
-                </Body>
-                <Right>
-                  <Button onPress={this.goToSettings} transparent>
-                    <Icon name="options" />
-                  </Button>
-                </Right>
-              </Header>
+              <ScreenHeader
+                title={`Day ${day + 1}`}
+                navigation={this.props.navigation}
+                rightButtonIcon="options"
+                rightButtonAction={this.goToSettings}
+              />
               <Tabs locked page={this.state.tabNum} onChangeTab={(tab: any) => this.setState({ tabNum: tab.i })}>
                 {lifts.map((lift, liftIndex) => {
                   return (
@@ -346,7 +391,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                         <SetCard title="Main Sets">
                           {WEIGHT_SCHEME[week].map((percent, index) => {
                             let weight = this.getWeight(percent, lift);
-                            let reps = REP_SCHEME[week][index];
+                            let reps = repScheme.scheme[week][index];
                             let finishSet = (reps: number, fromModal?: boolean) =>
                               this.finishSet("mainSets", reps, liftIndex, index, fromModal);
                             let checked = currentLift.mainSets[liftIndex][index];
@@ -412,10 +457,34 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                           </SetCard>
                         )}
 
+                        {bbbSetConfig && bbbSetConfig.enabled && (
+                          <SetCard title="BBB Sets">
+                            {bbbSetConfig.match &&
+                              bbbNum.map((set, index) => {
+                                let percent = bbbSetConfig.percent;
+                                let reps = bbbSetConfig.reps;
+                                let finishSet = (reps: number, fromModal?: boolean) =>
+                                  this.finishSet("bbbSets", reps, liftIndex, index, fromModal);
+                                let checked = currentLift.bbbSets[liftIndex][index];
+                                return (
+                                  <SetItem
+                                    key={index}
+                                    weight={this.getWeight(percent, lift)}
+                                    percent={percent}
+                                    reps={reps}
+                                    checked={checked}
+                                    finishSet={() => finishSet(reps)}
+                                    repsPopup={() => this.repsPopup(checked !== undefined ? checked : reps, finishSet)}
+                                  />
+                                );
+                              })}
+                          </SetCard>
+                        )}
+
                         {jokerSetConfig && jokerSetConfig.enabled && (
                           <SetCard title="Joker Sets">
                             {jokerNum.map((set, index) => {
-                              let reps = REP_SCHEME[week][2];
+                              let reps = repScheme.scheme[week][2];
                               let percent = WEIGHT_SCHEME[week][2] + jokerSetConfig.increase * (index + 1);
                               let finishSet = (reps: number) => this.finishSet("jokerSets", reps, liftIndex, index);
                               let checked = currentLift.jokerSets[liftIndex][index];
@@ -440,7 +509,7 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                             {WEIGHT_SCHEME[week]
                               .map((percent, index) => {
                                 let weight = this.getWeight(percent, lift);
-                                let reps = REP_SCHEME[week][index];
+                                let reps = repScheme.scheme[week][index];
                                 let finishSet = (reps: number) => () =>
                                   this.finishSet("pyramidSets", reps, liftIndex, index);
                                 let checked = currentLift.jokerSets[liftIndex][index];
@@ -526,7 +595,14 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                   </Content>
                 </Tab>
               </Tabs>
-              {this.state.timer && <RestTimer timeRemaining={this.state.timeRemaining} />}
+              {this.state.timer && (
+                <RestTimer
+                  changeTime={this.changeTime}
+                  cancelTimer={this.cancelTimer}
+                  totalTime={this.state.totalTime}
+                  timeRemaining={this.state.timeRemaining}
+                />
+              )}
             </Container>
           );
         }}
@@ -534,102 +610,3 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
     );
   }
 }
-
-const checkboxTheme = {
-  checkboxSize: 200
-};
-
-const styles = StyleSheet.create({
-  repButtons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center"
-  },
-  addRemoveButton: {
-    margin: 10
-  },
-  modalOuter: {
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  modalInner: {
-    borderRadius: 10,
-    backgroundColor: Colors.dark,
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "70%",
-    height: "55%"
-  },
-  set: {
-    width: "100%",
-    flexDirection: "row",
-    paddingTop: 5,
-    paddingBottom: 5,
-    alignItems: "center",
-    justifyContent: "flex-start"
-  },
-  text: {
-    fontSize: 25,
-    width: "35%"
-  },
-
-  plates: {
-    width: "55%"
-  },
-  fslCheckbox: {
-    padding: 5,
-    paddingLeft: 8,
-    borderRadius: 30,
-    width: 30,
-    height: 30,
-    margin: 5
-  },
-  checkboxOuter: {
-    flex: 0,
-    padding: 5,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  checkBoxDisabled: {
-    padding: 5,
-    paddingLeft: 8,
-    borderRadius: 30,
-    width: 30,
-    height: 30,
-    margin: 5
-  },
-  checkbox: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    alignSelf: "flex-start",
-    borderRadius: 30 / 2,
-    width: 30,
-    height: 30
-  },
-  subTitle: {
-    paddingTop: 5,
-    fontSize: 14
-  },
-  noPadding: {
-    paddingLeft: 0,
-    paddingRight: 0
-  },
-  touchablePadding: {
-    width: "100%",
-    flexDirection: "row",
-
-    paddingLeft: 15,
-    paddingRight: 15
-  },
-  touchableInner: {
-    flex: -1,
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 3,
-    paddingBottom: 3
-  }
-});

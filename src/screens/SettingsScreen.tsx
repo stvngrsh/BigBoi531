@@ -1,29 +1,14 @@
+import { Body, Container, Content, Icon, List, ListItem, Right, Text, View } from "native-base";
 import React from "react";
-import { StyleSheet } from "react-native";
-import {
-  View,
-  Button,
-  Text,
-  Icon,
-  Spinner,
-  Container,
-  Content,
-  Header,
-  Title,
-  Body,
-  List,
-  ListItem,
-  Left,
-  Right
-} from "native-base";
-import { Screens, ScreenProps } from "../App";
-import Storage from "../containers/Storage";
+import { ScreenProps, Screens } from "../App";
+import { ScreenHeader } from "../components/ScreenHeader";
 
 export interface SettingsScreenState {
   warmup: boolean;
   joker: boolean;
   fsl: boolean;
   pyramid: boolean;
+  bbb: boolean;
 }
 
 export default class SettingsScreen extends React.Component<ScreenProps, SettingsScreenState> {
@@ -31,7 +16,8 @@ export default class SettingsScreen extends React.Component<ScreenProps, Setting
     warmup: false,
     joker: false,
     fsl: false,
-    pyramid: false
+    pyramid: false,
+    bbb: false
   };
 
   constructor(props: ScreenProps) {
@@ -45,13 +31,20 @@ export default class SettingsScreen extends React.Component<ScreenProps, Setting
     });
   }
 
-  async getSummaryData() {
-    let { warmupSetConfig, fslSetConfig, jokerSetConfig, pyramidSetConfig } = this.props.dataContainer.state;
+  getSummaryData() {
+    let {
+      warmupSetConfig,
+      fslSetConfig,
+      jokerSetConfig,
+      pyramidSetConfig,
+      bbbSetConfig
+    } = this.props.dataContainer.state;
     this.setState({
       warmup: warmupSetConfig.enabled,
       fsl: fslSetConfig.enabled,
       joker: jokerSetConfig.enabled,
-      pyramid: pyramidSetConfig.enabled
+      pyramid: pyramidSetConfig.enabled,
+      bbb: bbbSetConfig.enabled
     });
   }
 
@@ -107,6 +100,15 @@ export default class SettingsScreen extends React.Component<ScreenProps, Setting
               <Icon active name="arrow-forward" />
             </Right>
           </ListItem>
+          <ListItem icon onPress={() => this.navigate(Screens.BBB_SETS)}>
+            <Body>
+              <Text>BBB Sets</Text>
+            </Body>
+            <Right>
+              <Text>{this.state.bbb ? "Enabled" : "Disabled"}</Text>
+              <Icon active name="arrow-forward" />
+            </Right>
+          </ListItem>
           <ListItem icon onPress={() => this.navigate(Screens.PYRAMID_SETS)}>
             <Body>
               <Text>Pyramid Sets</Text>
@@ -124,34 +126,9 @@ export default class SettingsScreen extends React.Component<ScreenProps, Setting
   render() {
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>Settings</Title>
-          </Body>
-          <Right />
-        </Header>
-        <Content contentContainerStyle={styles.container}>{this.renderContent()}</Content>
+        <ScreenHeader title="Settings" navigation={this.props.navigation} />
+        <Content>{this.renderContent()}</Content>
       </Container>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 5
-  },
-  spanButton: {
-    flexDirection: "column",
-    width: "100%",
-    height: 70,
-    justifyContent: "space-around"
-  }
-});

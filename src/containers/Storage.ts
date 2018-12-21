@@ -1,16 +1,19 @@
-import {
-  CycleData,
-  OneRepMax,
-  RestTimes,
-  Cycle,
-  TrackedLift,
-  JokerSetConfig,
-  FSLSetConfig,
-  PyramidSetConfig,
-  WarmupSetConfig,
-  Lift
-} from "../Types";
 import { AsyncStorage } from "react-native";
+import {
+  BBBSetConfig,
+  CycleData,
+  FSLSetConfig,
+  JokerSetConfig,
+  Lift,
+  OneRepMax,
+  PyramidSetConfig,
+  RepScheme,
+  REP_SCHEMES,
+  RestTimes,
+  TrackedLift,
+  WarmupSetConfig,
+  PlateConfig
+} from "../Types";
 
 const CURRENT_CYCLE = "CURRENT_CYCLE";
 const HISTORY = "HISTORY";
@@ -21,8 +24,97 @@ const FSL_SET_CONFIG = "FSL_SET_CONFIG";
 const PYRAMID_SET_CONFIG = "PYRAMID_SET_CONFIG";
 const WARMUP_SET_CONFIG = "WARMUP_SET_CONFIG";
 const BBB_SET_CONFIG = "BBB_SET_CONFIG";
+const LOWEST_POUND = "LOWEST_POUND";
+const LOWEST_KILO = "LOWEST_KILO";
+const METRIC = "METRIC";
+const REP_SCHEME = "REP_SCHEME";
+const METRIC_PLATES = "METRIC_PLATES";
+const US_PLATES = "US_PLATES";
 
 export default class Storage {
+  async getPlateConfig(metric: boolean): Promise<PlateConfig> {
+    let json;
+    if (metric) {
+      json = await AsyncStorage.getItem(METRIC_PLATES);
+    } else {
+      json = await AsyncStorage.getItem(US_PLATES);
+    }
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      let config = new PlateConfig();
+      this.setPlateConfig(config, metric);
+      return config;
+    }
+  }
+
+  setPlateConfig = async (config: PlateConfig, metric: boolean) => {
+    if (metric) {
+      AsyncStorage.setItem(METRIC_PLATES, JSON.stringify(config));
+    } else {
+      AsyncStorage.setItem(US_PLATES, JSON.stringify(config));
+    }
+  };
+
+  async getLowestPlate(metric: boolean): Promise<number> {
+    let json;
+
+    if (metric) {
+      json = await AsyncStorage.getItem(LOWEST_KILO);
+    } else {
+      json = await AsyncStorage.getItem(LOWEST_POUND);
+    }
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      let plate;
+      if (metric) {
+        plate = 1;
+      } else {
+        plate = 2.5;
+      }
+      this.setLowestPlate(plate, metric);
+      return plate;
+    }
+  }
+
+  setLowestPlate = async (plate: number, metric: boolean) => {
+    if (metric) {
+      AsyncStorage.setItem(LOWEST_KILO, JSON.stringify(plate));
+    } else {
+      AsyncStorage.setItem(LOWEST_POUND, JSON.stringify(plate));
+    }
+  };
+
+  async getMetric(): Promise<boolean> {
+    let json = await AsyncStorage.getItem(METRIC);
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      this.setMetric(false);
+      return false;
+    }
+  }
+
+  setMetric = async (metric: boolean) => {
+    AsyncStorage.setItem(METRIC, JSON.stringify(metric));
+  };
+
+  async getRepScheme(): Promise<RepScheme> {
+    let json = await AsyncStorage.getItem(REP_SCHEME);
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      let config = REP_SCHEMES[0];
+      this.setRepScheme(config);
+      return config;
+    }
+  }
+
+  setRepScheme = async (config: RepScheme) => {
+    AsyncStorage.setItem(REP_SCHEME, JSON.stringify(config));
+  };
+
   async getWarmupSetConfig(): Promise<WarmupSetConfig> {
     let json = await AsyncStorage.getItem(WARMUP_SET_CONFIG);
     if (json !== null) {
@@ -36,6 +128,21 @@ export default class Storage {
 
   setWarmupSetConfig = async (config: WarmupSetConfig) => {
     AsyncStorage.setItem(WARMUP_SET_CONFIG, JSON.stringify(config));
+  };
+
+  async getBBBSetConfig(): Promise<BBBSetConfig> {
+    let json = await AsyncStorage.getItem(BBB_SET_CONFIG);
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      let config = new BBBSetConfig(false, false, 10, 5, 50);
+      this.setBBBSetConfig(config);
+      return config;
+    }
+  }
+
+  setBBBSetConfig = async (config: BBBSetConfig) => {
+    AsyncStorage.setItem(BBB_SET_CONFIG, JSON.stringify(config));
   };
 
   async getPyramidSetConfig(): Promise<PyramidSetConfig> {

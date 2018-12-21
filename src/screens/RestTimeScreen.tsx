@@ -1,23 +1,9 @@
+import { Body, Container, Content, List, ListItem, Right, Text, View } from "native-base";
 import React from "react";
-import { StyleSheet, TextInput } from "react-native";
-import {
-  View,
-  Button,
-  Text,
-  Icon,
-  Container,
-  Content,
-  Header,
-  Title,
-  Body,
-  List,
-  ListItem,
-  Left,
-  Right
-} from "native-base";
-import { RestTimes } from "../Types";
-import Storage from "../containers/Storage";
 import { ScreenProps } from "../App";
+import { ScreenHeader } from "../components/ScreenHeader";
+import { InlineInput } from "../Styled";
+import { RestTimes } from "../Types";
 
 export interface RestTimeScreenState {
   restTimes: RestTimes;
@@ -88,11 +74,10 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
                 <Text>Warmup Sets</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.warmupRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("warmup", value)}
                   value={this.state.restTimes.warmup.toString()}
                 />
@@ -104,11 +89,10 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
                 <Text>Main Sets</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.mainSetRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("mainSet", value)}
                   value={this.state.restTimes.mainSet.toString()}
                 />
@@ -120,11 +104,10 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
                 <Text>Secondary Sets</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.secondaryRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("fsl", value)}
                   value={this.state.restTimes.fsl.toString()}
                 />
@@ -136,11 +119,10 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
                 <Text>Assistance Sets</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.assistanceRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("secondary", value)}
                   value={this.state.restTimes.secondary.toString()}
                 />
@@ -157,43 +139,14 @@ export default class RestTimeScreen extends React.Component<ScreenProps, RestTim
   render() {
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>Settings</Title>
-          </Body>
-          <Right>
-            <Button transparent onPress={this.resetDefaults}>
-              <Text>Reset</Text>
-            </Button>
-          </Right>
-        </Header>
-        <Content contentContainerStyle={styles.container}>{this.renderContent()}</Content>
+        <ScreenHeader
+          title="Rest Times"
+          navigation={this.props.navigation}
+          rightButtonText="Reset"
+          rightButtonAction={this.resetDefaults}
+        />
+        <Content>{this.renderContent()}</Content>
       </Container>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 5
-  },
-  spanButton: {
-    flexDirection: "column",
-    width: "100%",
-    height: 70,
-    justifyContent: "space-around"
-  },
-  inlineInput: {
-    flexDirection: "row",
-    color: "#808080",
-    fontSize: 18
-  }
-});

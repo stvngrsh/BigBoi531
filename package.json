@@ -8,11 +8,13 @@
     "@types/react": "16.3.18",
     "@types/react-native": "0.55.4",
     "@types/react-navigation": "2.0.21",
+    "@types/styled-components": "^4.1.2",
     "react-native-typescript-transformer": "1.2.10",
     "tslint": "5.11.0",
     "tslint-eslint-rules": "5.4.0",
     "tslint-react": "3.6.0",
-    "typescript": "3.0.3"
+    "typescript": "^3.0.3",
+    "typescript-styled-plugin": "^0.13.0"
   },
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -30,9 +32,11 @@
     "react": "16.3.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-30.0.0.tar.gz",
     "react-native-modal": "^7.0.1",
+    "react-native-progress-circle": "^2.0.1",
     "react-native-swipe-gestures": "^1.0.3",
     "react-native-swipeable": "^0.6.0",
     "react-navigation": "2.14.2",
+    "styled-components": "^4.1.2",
     "tslib": "1.9.3",
     "unstated": "^2.1.1",
     "whatwg-fetch": "2.0.4"

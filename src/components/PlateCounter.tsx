@@ -1,9 +1,18 @@
 import React from "react";
-import { Text } from "native-base";
-import { StyleSheet, View } from "react-native";
+import { Text, View } from "native-base";
+import styled from "styled-components";
 
 const PLATES = [45, 35, 25, 10, 5, 2.5];
 const BAR = 45;
+
+const Plates = styled(View)`
+  flex-direction: row;
+  justify-content: flex-start;
+`;
+
+const Plate = styled(Text)`
+  margin-right: 10px;
+`;
 
 export interface PlateCounterProps {
   weight: number;
@@ -41,36 +50,15 @@ export default class PlateCounter extends React.Component<PlateCounterProps, Pla
 
   public render() {
     return (
-      <View style={styles.plates}>
+      <Plates>
         {this.state.plates.map((plate, index) => {
           return (
             <View key={index}>
-              <Text style={styles.plate}>{plate}</Text>
+              <Plate>{plate}</Plate>
             </View>
           );
         })}
-      </View>
+      </Plates>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  icon: {
-    fontSize: 40,
-    color: "#303030"
-  },
-  plates: {
-    flexDirection: "row",
-    justifyContent: "flex-start"
-  },
-  label: {
-    padding: 0,
-    margin: 0,
-    fontWeight: "bold",
-    fontSize: 18,
-    position: "absolute"
-  },
-  plate: {
-    marginRight: 10
-  }
-});

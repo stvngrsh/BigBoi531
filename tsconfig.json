@@ -16,7 +16,12 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2017",
-    "strictNullChecks": false
+    "strictNullChecks": false,
+    "plugins": [
+      {
+        "name": "typescript-styled-plugin"
+      }
+    ]
   },
   "exclude": ["node_modules", "other", "build"],
   "types": ["typePatches"]

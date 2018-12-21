@@ -7,13 +7,21 @@
     "primaryColor": "#fff",
     "version": "0.0.2",
     "packagerOpts": {
-      "assetExts": ["ttf", "mp4"],
-      "sourceExts": ["ts", "tsx"],
+      "assetExts": [
+        "ttf",
+        "mp4"
+      ],
+      "sourceExts": [
+        "ts",
+        "tsx"
+      ],
       "transformer": "node_modules/react-native-typescript-transformer/index.js"
     },
     "ios": {
       "bundleIdentifier": "com.stvngrsh.BigBoi531",
       "supportsTablet": true
-    }
+    },
+    "slug": "BigBoi531",
+    "description": ""
   }
 }

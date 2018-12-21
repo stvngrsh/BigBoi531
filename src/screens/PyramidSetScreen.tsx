@@ -1,25 +1,23 @@
-import React, { ReactText } from "react";
-import { StyleSheet, TextInput, ListViewDataSource, ListView } from "react-native";
 import {
-  View,
+  Body,
   Button,
-  Text,
-  Icon,
   Container,
   Content,
   Header,
-  Title,
-  Body,
+  Icon,
+  Left,
   List,
   ListItem,
-  Left,
   Right,
-  Switch,
   Separator,
-  Segment
+  Switch,
+  Text,
+  Title
 } from "native-base";
+import React from "react";
 import { ScreenProps } from "../App";
 import { PyramidSetConfig } from "../Types";
+import { ScreenHeader } from "../components/ScreenHeader";
 
 export interface PyramidSetScreenState {
   pyramidSetConfig?: PyramidSetConfig;
@@ -100,33 +98,9 @@ export default class PyramidSetScreen extends React.Component<ScreenProps, Pyram
   render() {
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>Pyramid Sets</Title>
-          </Body>
-          <Right />
-        </Header>
+        <ScreenHeader title="Pyramid Sets" navigation={this.props.navigation} />
         <Content>{this.renderContent()}</Content>
       </Container>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  spanButton: {
-    flexDirection: "column",
-    width: "100%",
-    height: 70,
-    justifyContent: "space-around"
-  },
-  inlineInput: {
-    flexDirection: "row",
-    color: "#808080",
-    fontSize: 18
-  }
-});

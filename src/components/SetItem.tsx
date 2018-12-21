@@ -1,10 +1,10 @@
 import * as React from "react";
-import { WarmupSetConfig } from "../Types";
 import { Platform, TouchableHighlight, TouchableNativeFeedback, StyleSheet } from "react-native";
 import { View, Text, Icon } from "native-base";
 import { Weight } from "./Weight";
 import PlateCounter from "./PlateCounter";
 import { Colors } from "../../native-base-theme/Colors";
+import styled from "styled-components";
 
 export interface SetItemProps {
   percent: number;
@@ -18,179 +18,163 @@ export interface SetItemProps {
 
 const TouchableComponent = Platform.OS === "ios" ? TouchableHighlight : TouchableNativeFeedback;
 
+const CHECKBOX_SIZE = 32;
+const CHECKBOX_INNER = CHECKBOX_SIZE - 8;
+
+const Set = styled(View)`
+  width: 100%;
+  flex-direction: row;
+  padding-top: 5;
+  padding-bottom: 5;
+  align-items: center;
+  justify-content: flex-start;
+`;
+
+const SetText = styled(Text)`
+  font-size: 25;
+  width: 35%;
+`;
+
+const Plates = styled(View)`
+  width: 55%;
+`;
+
+const IconInner = styled(Icon)`
+  font-size: ${CHECKBOX_INNER};
+`;
+
+const CheckboxOuter = styled(View)`
+  padding: 5px;
+  justify-content: center;
+  align-items: center;
+`;
+
+const Checkbox = styled(View)`
+  border-style: solid;
+  border-width: 1;
+  border-color: ${Colors.primary};
+  align-self: flex-start;
+  border-radius: ${CHECKBOX_SIZE / 2};
+  width: ${CHECKBOX_SIZE};
+  height: ${CHECKBOX_SIZE};
+  justify-content: center;
+  align-items: center;
+`;
+
+const CheckBoxInner = styled(View)`
+  border-style: solid;
+  border-width: 1;
+  border-radius: ${CHECKBOX_INNER / 2};
+  width: ${CHECKBOX_INNER};
+  height: ${CHECKBOX_INNER};
+  justify-content: center;
+  align-items: center;
+`;
+
+const CheckboxComplete = styled(Checkbox)`
+  border-color: ${Colors.success};
+`;
+
+const CheckboxInnerComplete = styled(CheckBoxInner)`
+  border-color: ${Colors.success};
+  background-color: ${Colors.success};
+`;
+
+const CheckboxMissing = styled(Checkbox)`
+  border-color: ${Colors.danger};
+`;
+
+const CheckboxInnerMissing = styled(CheckBoxInner)`
+  border-color: ${Colors.danger};
+  background-color: ${Colors.danger};
+`;
+
+const CheckboxLess = styled(Checkbox)`
+  border-color: ${Colors.warning};
+`;
+
+const CheckboxInnerLess = styled(CheckBoxInner)`
+  border-color: ${Colors.warning};
+  background-color: ${Colors.warning};
+`;
+
+const SubTitle = styled(Text)`
+  padding-top: 5;
+  font-size: 14;
+`;
+
+const TouchablePadding = styled(TouchableComponent)`
+  width: 100%;
+  flex-direction: row;
+  padding-left: 15px;
+  padding-right: 15px;
+`;
+
+const TouchableInner = styled(View)`
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 3;
+  padding-bottom: 3;
+`;
+
+const TouchableColumn = styled(View)`
+  flex-direction: column;
+`;
+
 function getCheckbox(reps: number, checked?: number) {
   if (checked === undefined) {
-    return <View style={styles.checkbox} />;
+    return <Checkbox />;
   } else if (checked === reps) {
     return (
-      <View style={styles.checkboxComplete}>
-        <View style={styles.checkboxCompleteInner} />
-      </View>
+      <CheckboxComplete>
+        <CheckboxInnerComplete />
+      </CheckboxComplete>
     );
   } else if (checked === 0) {
     return (
-      <View style={styles.checkboxMissing}>
-        <View style={styles.checkboxMissingInner} />
-      </View>
+      <CheckboxMissing>
+        <CheckboxInnerMissing />
+      </CheckboxMissing>
     );
   } else if (checked > reps) {
     return (
-      <View style={styles.checkboxComplete}>
-        <View style={styles.checkboxCompleteInner}>
-          <Icon style={styles.iconInner} name="add" />
-        </View>
-      </View>
+      <CheckboxComplete>
+        <CheckboxInnerComplete>
+          <IconInner name="add" />
+        </CheckboxInnerComplete>
+      </CheckboxComplete>
     );
   } else if (checked < reps) {
     return (
-      <View style={styles.checkboxLess}>
-        <View style={styles.checkboxLessInner}>
-          <Icon style={styles.iconInner} name="remove" />
-        </View>
-      </View>
+      <CheckboxLess>
+        <CheckboxInnerLess>
+          <IconInner name="remove" />
+        </CheckboxInnerLess>
+      </CheckboxLess>
     );
   }
 }
 
 export function SetItem(props: SetItemProps) {
   return (
-    <TouchableComponent style={styles.touchablePadding} onPress={props.finishSet} onLongPress={props.repsPopup}>
-      <View style={styles.touchableInner}>
-        <View style={{ flexDirection: "column", flex: -1 }}>
-          <Text style={styles.subTitle}>{props.percent}% RM</Text>
-          <View style={styles.set}>
-            <Text style={styles.text}>
+    <TouchablePadding onPress={props.finishSet} onLongPress={props.repsPopup}>
+      <TouchableInner>
+        <TouchableColumn>
+          <SubTitle>{props.percent}% RM</SubTitle>
+          <Set>
+            <SetText>
               <Weight weight={props.weight} />x{props.reps}
               {props.amrep && "+"}
-            </Text>
-            <View style={styles.plates}>
+            </SetText>
+            <Plates>
               <PlateCounter weight={props.weight} />
-            </View>
-          </View>
-        </View>
-        <View style={styles.checkboxOuter}>{getCheckbox(props.reps, props.checked)}</View>
-      </View>
-    </TouchableComponent>
+            </Plates>
+          </Set>
+        </TouchableColumn>
+        <CheckboxOuter>{getCheckbox(props.reps, props.checked)}</CheckboxOuter>
+      </TouchableInner>
+    </TouchablePadding>
   );
 }
-
-const CHECKBOX_SIZE = 32;
-const styles = StyleSheet.create({
-  set: {
-    width: "100%",
-    flexDirection: "row",
-    paddingTop: 5,
-    paddingBottom: 5,
-    alignItems: "center",
-    justifyContent: "flex-start"
-  },
-  text: {
-    fontSize: 25,
-    width: "35%"
-  },
-  plates: {
-    width: "55%"
-  },
-  iconInner: {
-    fontSize: CHECKBOX_SIZE - 8,
-    textAlign: "center"
-  },
-  checkboxOuter: {
-    flex: 0,
-    padding: 5,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  checkbox: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    alignSelf: "flex-start",
-    borderRadius: CHECKBOX_SIZE / 2,
-    width: CHECKBOX_SIZE,
-    height: CHECKBOX_SIZE
-  },
-  checkboxComplete: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: Colors.success,
-    alignSelf: "flex-start",
-    borderRadius: CHECKBOX_SIZE / 2,
-    width: CHECKBOX_SIZE,
-    height: CHECKBOX_SIZE,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  checkboxCompleteInner: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: Colors.success,
-    backgroundColor: Colors.success,
-    borderRadius: (CHECKBOX_SIZE - 8) / 2,
-    width: CHECKBOX_SIZE - 8,
-    height: CHECKBOX_SIZE - 8,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  checkboxMissing: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: Colors.danger,
-    alignSelf: "flex-start",
-    borderRadius: CHECKBOX_SIZE / 2,
-    width: CHECKBOX_SIZE,
-    height: CHECKBOX_SIZE,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  checkboxMissingInner: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: Colors.danger,
-    backgroundColor: Colors.danger,
-    borderRadius: (CHECKBOX_SIZE - 8) / 2,
-    width: CHECKBOX_SIZE - 8,
-    height: CHECKBOX_SIZE - 8
-  },
-  checkboxLess: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: Colors.warning,
-    alignSelf: "flex-start",
-    borderRadius: CHECKBOX_SIZE / 2,
-    width: CHECKBOX_SIZE,
-    height: CHECKBOX_SIZE,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  checkboxLessInner: {
-    borderStyle: "solid",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: Colors.warning,
-    backgroundColor: Colors.warning,
-    borderRadius: (CHECKBOX_SIZE - 8) / 2,
-    width: CHECKBOX_SIZE - 8,
-    height: CHECKBOX_SIZE - 8
-  },
-  subTitle: {
-    paddingTop: 5,
-    fontSize: 14
-  },
-  touchablePadding: {
-    width: "100%",
-    flexDirection: "row",
-    paddingLeft: 15,
-    paddingRight: 15
-  },
-  touchableInner: {
-    flex: -1,
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 3,
-    paddingBottom: 3
-  }
-});

@@ -1,25 +1,25 @@
-import React, { ReactText } from "react";
-import { StyleSheet, TextInput, ListViewDataSource, ListView } from "react-native";
 import {
-  View,
+  Body,
   Button,
-  Text,
-  Icon,
   Container,
   Content,
   Header,
-  Title,
-  Body,
+  Icon,
+  Left,
   List,
   ListItem,
-  Left,
   Right,
-  Switch,
+  Segment,
   Separator,
-  Segment
+  Switch,
+  Text,
+  Title
 } from "native-base";
+import React from "react";
 import { ScreenProps } from "../App";
+import { InlineInput } from "../Styled";
 import { FSLSetConfig } from "../Types";
+import { ScreenHeader } from "../components/ScreenHeader";
 
 export interface FSLSetsScreenState {
   fslSetConfig?: FSLSetConfig;
@@ -132,11 +132,10 @@ export default class FSLSetsScreen extends React.Component<ScreenProps, FSLSetsS
                 <Text>Set Count</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.setsRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("sets", value)}
                   value={fslSetConfig.sets ? fslSetConfig.sets.toString() : "5"}
                 />
@@ -150,11 +149,10 @@ export default class FSLSetsScreen extends React.Component<ScreenProps, FSLSetsS
                 <Text>Reps per Set</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.repsRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("reps", value)}
                   value={fslSetConfig.reps ? fslSetConfig.reps.toString() : "5"}
                 />
@@ -171,37 +169,14 @@ export default class FSLSetsScreen extends React.Component<ScreenProps, FSLSetsS
   render() {
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>FSL Sets</Title>
-          </Body>
-          <Right>
-            <Button transparent onPress={this.resetDefaults}>
-              <Text>Reset</Text>
-            </Button>
-          </Right>
-        </Header>
+        <ScreenHeader
+          title="FSL Sets"
+          navigation={this.props.navigation}
+          rightButtonAction={this.resetDefaults}
+          rightButtonText="Reset"
+        />
         <Content>{this.renderContent()}</Content>
       </Container>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  spanButton: {
-    flexDirection: "column",
-    width: "100%",
-    height: 70,
-    justifyContent: "space-around"
-  },
-  inlineInput: {
-    flexDirection: "row",
-    color: "#808080",
-    fontSize: 18
-  }
-});

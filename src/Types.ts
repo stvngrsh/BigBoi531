@@ -118,6 +118,71 @@ export class RestTimes implements INameToValueMap {
   }
 }
 
+export type PlateScheme = {
+  weight: number;
+  enabled: boolean;
+};
+
+export const METRIC_PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
+export const US_PLATES = [45, 35, 25, 10, 5, 2.5];
+
+export class PlateConfig {
+  disabled: boolean[];
+  custom: number[];
+
+  constructor() {
+    this.disabled = [];
+    this.custom = [];
+  }
+}
+
+export const POUNDS_TO_KILOS = 0.453592;
+export const WEIGHT_SCHEME = [[65, 75, 85], [70, 80, 90], [75, 85, 95]];
+
+export type RepScheme = {
+  name: string;
+  scheme: number[][];
+};
+
+export const REP_SCHEMES: RepScheme[] = [
+  {
+    name: "5/3/1",
+    scheme: [[5, 5, 5], [3, 3, 3], [5, 3, 1]]
+  },
+  {
+    name: "3/5/1",
+    scheme: [[3, 3, 3], [5, 5, 5], [5, 3, 1]]
+  },
+  {
+    name: "8/6/3",
+    scheme: [[8, 8, 8], [6, 6, 6], [3, 3, 3]]
+  }
+];
+
+export class BBBSetConfig {
+  enabled: boolean;
+  match: boolean;
+  reps: number;
+  sets: number;
+  percent: number;
+  bench?: Lift;
+  squat?: Lift;
+  deads?: Lift;
+  press?: Lift;
+
+  constructor(enabled: boolean, match: boolean, reps: number, sets: number, percent: number) {
+    this.enabled = enabled;
+    this.match = match;
+    this.reps = reps;
+    this.sets = sets;
+    this.percent = percent;
+    this.squat = Lift.PRESS;
+    this.bench = Lift.SQUAT;
+    this.deads = Lift.BENCH;
+    this.press = Lift.DEADS;
+  }
+}
+
 export class JokerSetConfig {
   enabled: boolean;
   increase: number;

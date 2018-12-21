@@ -1,25 +1,36 @@
-import React, { ReactText } from "react";
-import { StyleSheet, TextInput, ListViewDataSource, ListView } from "react-native";
 import {
-  View,
+  Body,
   Button,
-  Text,
-  Icon,
   Container,
   Content,
   Header,
-  Title,
-  Body,
+  Icon,
+  Left,
   List,
   ListItem,
-  Left,
   Right,
-  Switch,
   Separator,
-  Segment
+  Switch,
+  Text,
+  Title,
+  View
 } from "native-base";
+import React from "react";
+import styled from "styled-components";
 import { ScreenProps } from "../App";
+import { InlineInput } from "../Styled";
 import { WarmupSetConfig } from "../Types";
+import { ScreenHeader } from "../components/ScreenHeader";
+
+const AddRemove = styled(View)`
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+`;
+
+const AddRemoveButton = styled(Button)`
+  margin: 10px;
+`;
 
 export interface WarmupSetsScreenState {
   warmupSetConfig?: WarmupSetConfig;
@@ -128,11 +139,10 @@ export default class WarmupSetsScreen extends React.Component<ScreenProps, Warmu
                       <Text>Warmup Set {index + 1}</Text>
                     </Body>
                     <Right style={{ flexDirection: "row" }}>
-                      <TextInput
+                      <InlineInput
                         ref={this.setRefs[index]}
                         onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                         keyboardType="number-pad"
-                        style={styles.inlineInput}
                         onChangeText={value => this.changeValue(index, value)}
                         value={set.toString()}
                       />
@@ -143,14 +153,14 @@ export default class WarmupSetsScreen extends React.Component<ScreenProps, Warmu
               })}
           </List>
           {warmupSetConfig.enabled && (
-            <View style={styles.addRemove}>
-              <Button onPress={this.removeSet} style={styles.addRemoveButton} icon info>
+            <AddRemove>
+              <AddRemoveButton onPress={this.removeSet} icon info>
                 <Icon name="remove" />
-              </Button>
-              <Button onPress={this.addSet} style={styles.addRemoveButton} icon info>
+              </AddRemoveButton>
+              <AddRemoveButton onPress={this.addSet} icon info>
                 <Icon name="add" />
-              </Button>
-            </View>
+              </AddRemoveButton>
+            </AddRemove>
           )}
         </View>
       );
@@ -161,41 +171,9 @@ export default class WarmupSetsScreen extends React.Component<ScreenProps, Warmu
   render() {
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>Warmup Sets</Title>
-          </Body>
-          <Right />
-        </Header>
+        <ScreenHeader title="Warmup Sets" navigation={this.props.navigation} />
         <Content>{this.renderContent()}</Content>
       </Container>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  addRemove: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  addRemoveButton: {
-    margin: 10
-  },
-  spanButton: {
-    flexDirection: "column",
-    width: "100%",
-    height: 70,
-    justifyContent: "space-around"
-  },
-  inlineInput: {
-    flexDirection: "row",
-    color: "#808080",
-    fontSize: 18
-  }
-});

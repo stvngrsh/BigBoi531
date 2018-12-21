@@ -1,11 +1,16 @@
 import * as React from "react";
 import { Card, CardItem, Text, Body } from "native-base";
-import { StyleSheet } from "react-native";
+import styled from "styled-components";
 
 export interface SetCardProps {
   title: string;
   children?: any;
 }
+
+const NoPadding = styled(CardItem)`
+  padding-left: 0;
+  padding-right: 0;
+`;
 
 export function SetCard(props: SetCardProps) {
   return (
@@ -13,16 +18,9 @@ export function SetCard(props: SetCardProps) {
       <CardItem header bordered button>
         <Text>{props.title}</Text>
       </CardItem>
-      <CardItem bordered style={styles.noPadding}>
+      <NoPadding>
         <Body>{props.children}</Body>
-      </CardItem>
+      </NoPadding>
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  noPadding: {
-    paddingLeft: 0,
-    paddingRight: 0
-  }
-});

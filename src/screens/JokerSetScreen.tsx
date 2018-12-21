@@ -1,24 +1,24 @@
-import React, { ReactText } from "react";
-import { StyleSheet, TextInput, ListViewDataSource, ListView } from "react-native";
 import {
-  View,
+  Body,
   Button,
-  Text,
-  Icon,
   Container,
   Content,
   Header,
-  Title,
-  Body,
+  Icon,
+  Left,
   List,
   ListItem,
-  Left,
   Right,
+  Separator,
   Switch,
-  Separator
+  Text,
+  Title
 } from "native-base";
+import React from "react";
 import { ScreenProps } from "../App";
+import { InlineInput } from "../Styled";
 import { JokerSetConfig } from "../Types";
+import { ScreenHeader } from "../components/ScreenHeader";
 
 export interface JokerSetsScreenState {
   jokerSetConfig?: JokerSetConfig;
@@ -107,11 +107,10 @@ export default class JokerSetsScreen extends React.Component<ScreenProps, JokerS
                 <Text>Extra Percent</Text>
               </Body>
               <Right style={{ flexDirection: "row" }}>
-                <TextInput
+                <InlineInput
                   ref={this.increaseRef}
                   onEndEditing={e => this.saveChanges(e.nativeEvent.text)}
                   keyboardType="number-pad"
-                  style={styles.inlineInput}
                   onChangeText={value => this.changeValue("increase", value)}
                   value={jokerSetConfig.increase ? jokerSetConfig.increase.toString() : "5"}
                 />
@@ -128,37 +127,14 @@ export default class JokerSetsScreen extends React.Component<ScreenProps, JokerS
   render() {
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.props.navigation.pop()}>
-              <Icon name="arrow-back" />
-            </Button>
-          </Left>
-          <Body>
-            <Title>Joker Sets</Title>
-          </Body>
-          <Right>
-            <Button transparent onPress={this.resetDefaults}>
-              <Text>Reset</Text>
-            </Button>
-          </Right>
-        </Header>
+        <ScreenHeader
+          title="Joker Sets"
+          navigation={this.props.navigation}
+          rightButtonText="Reset"
+          rightButtonAction={this.resetDefaults}
+        />
         <Content>{this.renderContent()}</Content>
       </Container>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  spanButton: {
-    flexDirection: "column",
-    width: "100%",
-    height: 70,
-    justifyContent: "space-around"
-  },
-  inlineInput: {
-    flexDirection: "row",
-    color: "#808080",
-    fontSize: 18
-  }
-});
