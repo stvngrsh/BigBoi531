@@ -10,7 +10,8 @@ import {
   PyramidSetConfig,
   WarmupSetConfig,
   RepScheme,
-  BBBSetConfig
+  BBBSetConfig,
+  AssistanceSetConfig
 } from "../Types";
 import Storage from "./Storage";
 import { Screens } from "../App";
@@ -29,6 +30,7 @@ export type DataContainerState = {
   metric?: boolean;
   repScheme?: RepScheme;
 
+  assistanceSetConfig?: AssistanceSetConfig;
   bbbSetConfig?: BBBSetConfig;
   warmupSetConfig?: WarmupSetConfig;
   fslSetConfig?: FSLSetConfig;
@@ -77,6 +79,10 @@ export default class DataContainer extends Container<DataContainerState> {
     return this.storage.setBBBSetConfig(bbbSetConfig).then(() => this.setState({ bbbSetConfig }));
   }
 
+  setAssistanceSetConfig(assistanceSetConfig: AssistanceSetConfig) {
+    return this.storage.setAssistanceSetConfig(assistanceSetConfig).then(() => this.setState({ assistanceSetConfig }));
+  }
+
   setJokerSetConfig(jokerSetConfig: JokerSetConfig) {
     return this.storage.setJokerSetConfig(jokerSetConfig).then(() => this.setState({ jokerSetConfig }));
   }
@@ -118,6 +124,7 @@ export default class DataContainer extends Container<DataContainerState> {
 
   getSettings() {
     Promise.all([
+      this.storage.getAssistanceSetConfig(),
       this.storage.getBBBSetConfig(),
       this.storage.getRestTimes(),
       this.storage.getOneRepMax(),
@@ -131,6 +138,7 @@ export default class DataContainer extends Container<DataContainerState> {
       this.storage.getRepScheme()
     ]).then(
       ([
+        assistanceSetConfig,
         bbbSetConfig,
         restTimes,
         oneRepMax,
@@ -144,6 +152,7 @@ export default class DataContainer extends Container<DataContainerState> {
         repScheme
       ]) => {
         this.setState({
+          assistanceSetConfig,
           bbbSetConfig,
           restTimes,
           oneRepMax,

@@ -458,11 +458,14 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                         )}
 
                         {bbbSetConfig && bbbSetConfig.enabled && (
-                          <SetCard title="BBB Sets">
+                          <SetCard title={bbbSetConfig.match ? "BBB Set" : "BBB Set: " + bbbSetConfig.lessBoring[lift]}>
                             {bbbSetConfig.match &&
                               bbbNum.map((set, index) => {
                                 let percent = bbbSetConfig.percent;
                                 let reps = bbbSetConfig.reps;
+                                if (lift === Lift.DEADS && bbbSetConfig.easyDeads) {
+                                  reps = bbbSetConfig.deadliftReps;
+                                }
                                 let finishSet = (reps: number, fromModal?: boolean) =>
                                   this.finishSet("bbbSets", reps, liftIndex, index, fromModal);
                                 let checked = currentLift.bbbSets[liftIndex][index];
@@ -470,6 +473,29 @@ export default class LiftScreen extends React.Component<ScreenProps, LiftScreenS
                                   <SetItem
                                     key={index}
                                     weight={this.getWeight(percent, lift)}
+                                    percent={percent}
+                                    reps={reps}
+                                    checked={checked}
+                                    finishSet={() => finishSet(reps)}
+                                    repsPopup={() => this.repsPopup(checked !== undefined ? checked : reps, finishSet)}
+                                  />
+                                );
+                              })}
+                            {!bbbSetConfig.match &&
+                              bbbNum.map((set, index) => {
+                                let percent = bbbSetConfig.percent;
+                                let reps = bbbSetConfig.reps;
+                                let finishSet = (reps: number, fromModal?: boolean) =>
+                                  this.finishSet("bbbSets", reps, liftIndex, index, fromModal);
+                                let checked = currentLift.bbbSets[liftIndex][index];
+                                let bbbLift = bbbSetConfig.lessBoring[lift];
+                                if (bbbLift === Lift.DEADS && bbbSetConfig.easyDeads) {
+                                  reps = bbbSetConfig.deadliftReps;
+                                }
+                                return (
+                                  <SetItem
+                                    key={index}
+                                    weight={this.getWeight(percent, bbbLift)}
                                     percent={percent}
                                     reps={reps}
                                     checked={checked}

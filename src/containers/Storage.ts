@@ -12,7 +12,8 @@ import {
   RestTimes,
   TrackedLift,
   WarmupSetConfig,
-  PlateConfig
+  PlateConfig,
+  AssistanceSetConfig
 } from "../Types";
 
 const CURRENT_CYCLE = "CURRENT_CYCLE";
@@ -24,6 +25,7 @@ const FSL_SET_CONFIG = "FSL_SET_CONFIG";
 const PYRAMID_SET_CONFIG = "PYRAMID_SET_CONFIG";
 const WARMUP_SET_CONFIG = "WARMUP_SET_CONFIG";
 const BBB_SET_CONFIG = "BBB_SET_CONFIG";
+const ASSISTANCE_CONFIG = "ASSISTANCE_CONFIG";
 const LOWEST_POUND = "LOWEST_POUND";
 const LOWEST_KILO = "LOWEST_KILO";
 const METRIC = "METRIC";
@@ -188,6 +190,21 @@ export default class Storage {
 
   setJokerSetConfig = async (config: JokerSetConfig) => {
     AsyncStorage.setItem(JOKER_SET_CONFIG, JSON.stringify(config));
+  };
+
+  async getAssistanceSetConfig(): Promise<AssistanceSetConfig> {
+    let json = await AsyncStorage.getItem(ASSISTANCE_CONFIG);
+    if (json !== null) {
+      return JSON.parse(json);
+    } else {
+      let config = new AssistanceSetConfig(false, []);
+      this.setAssistanceSetConfig(config);
+      return config;
+    }
+  }
+
+  setAssistanceSetConfig = async (config: AssistanceSetConfig) => {
+    AsyncStorage.setItem(ASSISTANCE_CONFIG, JSON.stringify(config));
   };
 
   async getOneRepMax(): Promise<OneRepMax> {

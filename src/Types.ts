@@ -165,10 +165,14 @@ export class BBBSetConfig {
   reps: number;
   sets: number;
   percent: number;
-  bench?: Lift;
-  squat?: Lift;
-  deads?: Lift;
-  press?: Lift;
+  easyDeads: boolean;
+  deadliftReps: number;
+  lessBoring: {
+    [Lift.BENCH]: Lift;
+    [Lift.PRESS]: Lift;
+    [Lift.SQUAT]: Lift;
+    [Lift.DEADS]: Lift;
+  };
 
   constructor(enabled: boolean, match: boolean, reps: number, sets: number, percent: number) {
     this.enabled = enabled;
@@ -176,10 +180,14 @@ export class BBBSetConfig {
     this.reps = reps;
     this.sets = sets;
     this.percent = percent;
-    this.squat = Lift.PRESS;
-    this.bench = Lift.SQUAT;
-    this.deads = Lift.BENCH;
-    this.press = Lift.DEADS;
+    this.easyDeads = false;
+    this.deadliftReps = 8;
+    this.lessBoring = {
+      Bench: Lift.SQUAT,
+      Squat: Lift.DEADS,
+      Press: Lift.BENCH,
+      Deadlift: Lift.PRESS
+    };
   }
 }
 
@@ -224,6 +232,22 @@ export class WarmupSetConfig {
   constructor(enabled: boolean, sets: number[]) {
     this.enabled = enabled;
     this.sets = sets;
+  }
+}
+
+export class AssistanceSet {
+  lift: String;
+  reps: number;
+  weight: number;
+}
+
+export class AssistanceSetConfig {
+  enabled: boolean;
+  days: AssistanceSet[][];
+
+  constructor(enabled: boolean, days: AssistanceSet[][]) {
+    this.enabled = enabled;
+    this.days = days;
   }
 }
 
