@@ -18,11 +18,12 @@ import {
 import React from "react";
 import { ScreenProps } from "../App";
 import { InlineInput } from "../Styled";
-import { FSLSetConfig, AssistanceSetConfig } from "../Types";
+import { FSLSetConfig, AssistanceSetConfig, CycleData } from "../Types";
 import { ScreenHeader } from "../components/ScreenHeader";
 
 export interface AssistanceSetsScreenState {
   assistanceSetConfig?: AssistanceSetConfig;
+  currentCycle?: CycleData;
 }
 
 export default class AssistanceSetsScreen extends React.Component<ScreenProps, AssistanceSetsScreenState> {
@@ -36,7 +37,8 @@ export default class AssistanceSetsScreen extends React.Component<ScreenProps, A
 
   componentDidMount() {
     let assistanceSetConfig = { ...this.props.dataContainer.state.assistanceSetConfig };
-    this.setState({ assistanceSetConfig });
+    let currentCycle = { ...this.props.dataContainer.state.currentCycle };
+    this.setState({ assistanceSetConfig, currentCycle });
   }
 
   toggleEnabled = (value: boolean) => {
@@ -70,6 +72,9 @@ export default class AssistanceSetsScreen extends React.Component<ScreenProps, A
               />
             </Right>
           </ListItem>
+          {assistanceSetConfig.enabled && assistanceSetConfig.days.map((day, index) => {
+            
+          })}
         </List>
       );
     }
