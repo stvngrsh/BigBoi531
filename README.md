@@ -17,8 +17,10 @@ Application is still in development and currently not available in the App store
 
 ## Screenshots
 
-<img alt="Lift Screen" src="./other/screenshots/liftscreen.png" width="300px">
-<img alt="Rest Timer" src="./other/screenshots/timer.png" width="300px">
-<img alt="Workout Select Screen" src="./other/screenshots/workoutselect.png" width="300px">
-<img alt="BBB Settings Screen" src="./other/screenshots/settings.png" width="300px">
-<img alt="Adjust Reps" src="./other/screenshots/reps.png" width="300px">
+<p float="left">
+    <img alt="Lift Screen" src="./other/screenshots/liftscreen.png" width="300px">
+    <img alt="Rest Timer" src="./other/screenshots/timer.png" width="300px">
+    <img alt="Workout Select Screen" src="./other/screenshots/workoutselect.png" width="300px">
+    <img alt="BBB Settings Screen" src="./other/screenshots/settings.png" width="300px">
+    <img alt="Adjust Reps" src="./other/screenshots/reps.png" width="300px">
+</p>
