@@ -113,7 +113,7 @@ export default class CycleOverviewScreen extends React.Component<ScreenProps, Cy
               let percent = 0;
               let length = data.state.currentCycle.lifts.length;
               for (let j = 0; j < length; j++) {
-                let day = j + (i + 1) * (i + 1) - i - 1;
+                let day = j + i * length;
                 if (data.state.currentCycle.trackedLifts[day]) {
                   completed.push(true);
                   percent += 1;

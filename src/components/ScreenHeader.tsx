@@ -13,16 +13,16 @@ export interface ScreenHeaderProps {
 export function ScreenHeader(props: ScreenHeaderProps) {
   return (
     <Header>
-      <Left>
+      <Left style={{ flex: 2 }}>
         <Button transparent onPress={() => props.navigation.pop()}>
           <Icon name="arrow-back" />
         </Button>
       </Left>
-      <Body>
+      <Body style={{ flex: 3 }}>
         <Title>{props.title}</Title>
       </Body>
       {props.rightButtonAction ? (
-        <Right>
+        <Right style={{ flex: 2 }}>
           <Button transparent onPress={props.rightButtonAction}>
             {props.rightButtonText && <Text>{props.rightButtonText}</Text>}
             {props.rightButtonIcon && <Icon name={props.rightButtonIcon} />}
