@@ -1,6 +1,6 @@
 # BigBoi 531
 
-A 531 program companion app built in React Native. The 531 Program is a strength training routine created by [Jim Wendler](https://jimwendler.com/). This app allows you to create a customized routine and follow the 531 program the way you want. Featuring tons of custimization options such as Boring But Big variations, assistance workout tracking, warmup sets and more.
+A 531 program companion app built in React Native & Expo. The 531 Program is a strength training routine created by [Jim Wendler](https://jimwendler.com/). This app allows you to create a customized routine and follow the 531 program the way you want. Featuring tons of custimization options such as Boring But Big variations, assistance workout tracking, warmup sets and more.
 
 Key features include:
 
